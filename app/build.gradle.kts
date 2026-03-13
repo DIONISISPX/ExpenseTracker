@@ -1,16 +1,16 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.devtools.ksp") version "2.2.10-2.0.2"
+    alias(libs.plugins.ksp)
+    id("com.google.dagger.hilt.android") apply false
 }
+
+// Apply Hilt after android extension is available
+apply(plugin = "com.google.dagger.hilt.android")
 
 android {
     namespace = "com.dionisispx.expensetracker"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.dionisispx.expensetracker"
@@ -61,10 +61,10 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
     // Room Database
-    val roomVersion = "2.6.1"
+    val roomVersion = "2.7.0-alpha13"
     implementation("androidx.room:room-runtime:$roomVersion")
-    implementation("androidx.room:room-ktx:$roomVersion") // Support for Coroutines/Flow
-    ksp("androidx.room:room-compiler:$roomVersion") // Room Compiler
+    implementation("androidx.room:room-ktx:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
 
     // CameraX
     val cameraxVersion = "1.3.2"
@@ -75,4 +75,7 @@ dependencies {
 
     // Google ML Kit (OCR AI)
     implementation("com.google.mlkit:text-recognition:16.0.0")
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 }
