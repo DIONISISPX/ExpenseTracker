@@ -26,6 +26,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.dionisispx.expensetracker.presentation.add_expense.AddExpenseScreen
+import com.dionisispx.expensetracker.presentation.home.HomeScreen
 
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
@@ -122,7 +124,11 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 HomeScreen()
             }
             composable(Screen.AddExpense.route) {
-                AddExpenseScreen()
+                AddExpenseScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
             }
             composable(Screen.Settings.route) {
                 SettingsScreen()
@@ -132,21 +138,6 @@ fun MainScreen(modifier: Modifier = Modifier) {
 }
 
 // Dummy screens just to test the navigation
-
-@Composable
-fun HomeScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Home Screen - Pie Chart Goes Here")
-    }
-}
-
-@Composable
-fun AddExpenseScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Add Expense - Camera/Manual Select Goes Here")
-    }
-}
-
 @Composable
 fun SettingsScreen() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

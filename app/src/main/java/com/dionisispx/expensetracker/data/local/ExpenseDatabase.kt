@@ -7,7 +7,7 @@ import com.dionisispx.expensetracker.domain.model.Expense
 // Main database class
 @Database(
     entities = [Expense::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class ExpenseDatabase : RoomDatabase() {
