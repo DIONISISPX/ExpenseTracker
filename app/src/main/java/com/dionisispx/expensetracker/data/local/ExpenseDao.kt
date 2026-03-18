@@ -23,4 +23,8 @@ interface ExpenseDao {
     // Get all expenses ordered by newest first
     @Query("SELECT * FROM expenses_table ORDER BY date DESC")
     fun getAllExpenses(): Flow<List<Expense>>
+
+    // Get expenses only for a specific month
+    @Query("SELECT * FROM expenses_table WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
+    fun getExpensesByDateRange(startDate: Long, endDate: Long): Flow<List<Expense>>
 }

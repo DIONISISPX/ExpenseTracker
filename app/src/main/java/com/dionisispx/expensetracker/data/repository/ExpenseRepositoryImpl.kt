@@ -15,6 +15,10 @@ class ExpenseRepositoryImpl @Inject constructor(
         return dao.getAllExpenses()
     }
 
+    override fun getExpensesByDateRange(startDate: Long, endDate: Long): Flow<List<Expense>> {
+        return dao.getExpensesByDateRange(startDate, endDate)
+    }
+
     override suspend fun insertExpense(expense: Expense) {
         dao.insertExpense(expense)
     }
