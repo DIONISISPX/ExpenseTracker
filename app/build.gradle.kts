@@ -78,8 +78,8 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
     implementation("androidx.camera:camera-view:$cameraxVersion")
 
-    // Google ML Kit (OCR AI)
-    implementation("com.google.mlkit:text-recognition:16.0.0")
+    // Tesseract OCR
+    implementation("cz.adaptech.tesseract4android:tesseract4android:4.9.0")
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
