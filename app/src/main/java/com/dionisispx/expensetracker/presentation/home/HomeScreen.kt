@@ -60,12 +60,7 @@ fun HomeScreen(
 
     // Format the month in Greek
     val formatter = remember {
-        val greeceLocale = java.util.Locale.Builder()
-            .setLanguage("el")
-            .setRegion("GR")
-            .build()
-
-        java.time.format.DateTimeFormatter.ofPattern("LLLL yyyy", greeceLocale)
+        java.time.format.DateTimeFormatter.ofPattern("LLLL yyyy", java.util.Locale.forLanguageTag("el-GR"))
     }
     val monthString = currentMonth.format(formatter).replaceFirstChar { it.uppercase() }
 

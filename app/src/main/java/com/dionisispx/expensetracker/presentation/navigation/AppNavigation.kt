@@ -34,87 +34,92 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Controller that manages app navigation
     val navController = rememberNavController()
 
+    // Get current route to highlight the selected item and hide/show bottom bar
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    // Boolean to check if we should show the bottom bar (hide it on AddExpense screen)
+    val showBottomBar = currentRoute != Screen.AddExpense.route
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            // Box allows us to overlap the FAB and the BottomAppBar
-            Box(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Get current route to highlight the selected item
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
-
-                BottomAppBar(
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+            // Only show the bottom bar if showBottomBar is true
+            if (showBottomBar) {
+                Box(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Home Icon Button (Left)
-                    IconButton(
-                        modifier = Modifier.weight(1f),
+                    BottomAppBar(
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    ) {
+                        // Home Icon Button (Left)
+                        IconButton(
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                navController.navigate(Screen.Home.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        ) {
+                            Screen.Home.icon?.let {
+                                Icon(
+                                    imageVector = it,
+                                    contentDescription = Screen.Home.title,
+                                    tint = if (currentRoute == Screen.Home.route) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        // Settings Icon Button (Right)
+                        IconButton(
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                navController.navigate(Screen.Settings.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        ) {
+                            Screen.Settings.icon?.let {
+                                Icon(
+                                    imageVector = it,
+                                    contentDescription = Screen.Settings.title,
+                                    tint = if (currentRoute == Screen.Settings.route) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+
+                    FloatingActionButton(
                         onClick = {
-                            navController.navigate(Screen.Home.route) {
+                            navController.navigate(Screen.AddExpense.route) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
-                        }
+                        },
+                        shape = CircleShape,
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .offset(y = (-20).dp)
                     ) {
-                        Screen.Home.icon?.let {
-                            Icon(
-                                imageVector = it,
-                                contentDescription = Screen.Home.title,
-                                tint = if (currentRoute == Screen.Home.route) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Expense"
+                        )
                     }
-
-                    // Empty space in the middle for the FAB to sit
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // Settings Icon Button (Right)
-                    IconButton(
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            navController.navigate(Screen.Settings.route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    ) {
-                        Screen.Settings.icon?.let {
-                            Icon(
-                                imageVector = it,
-                                contentDescription = Screen.Settings.title,
-                                tint = if (currentRoute == Screen.Settings.route) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-
-                // The FAB placed in the top-center of the Box, overlapping the bar
-                FloatingActionButton(
-                    onClick = {
-                        navController.navigate(Screen.AddExpense.route)
-                    },
-                    shape = CircleShape,
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        // Push it up so it sticks out of the bar
-                        .offset(y = (-20).dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Expense"
-                    )
                 }
             }
         }
     ) { innerPadding ->
-        // NavHost to define the navigation graph
         NavHost(
             navController = navController,
             startDestination = Screen.Home.route,
