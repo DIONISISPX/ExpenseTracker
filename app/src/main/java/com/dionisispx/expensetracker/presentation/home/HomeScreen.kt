@@ -46,6 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dionisispx.expensetracker.domain.model.Expense
 import com.dionisispx.expensetracker.presentation.ExpenseViewModel
+import kotlin.text.format
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -162,7 +164,6 @@ fun HomeScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(expenses) { expense ->
-                            // Removed the broken isVisible parameter.
                             ExpenseItem(expense = expense)
                         }
                     }
@@ -246,7 +247,7 @@ fun DonutChart(expenses: List<Expense>) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "€$amount",
+                text = "€${String.format(java.util.Locale.US, "%.2f", amount)}", // Format to US double
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -281,7 +282,7 @@ fun ExpenseItem(expense: Expense) {
                 )
             }
             Text(
-                text = "- €${expense.amount}",
+                text = "- €${String.format(java.util.Locale.US, "%.2f", expense.amount)}", // Format to US double
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.error,
                 fontWeight = FontWeight.Bold

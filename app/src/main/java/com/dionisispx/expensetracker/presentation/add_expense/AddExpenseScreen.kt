@@ -6,10 +6,11 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import android.media.ExifInterface
 import android.media.MediaActionSound
 import android.net.Uri
+import android.util.Base64
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.ImageCapture
@@ -49,6 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -62,16 +64,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.exifinterface.media.ExifInterface
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.dionisispx.expensetracker.data.remote.AnnotateImageRequest
+import com.dionisispx.expensetracker.data.remote.Feature
+import com.dionisispx.expensetracker.data.remote.VisionImage
+import com.dionisispx.expensetracker.data.remote.VisionNetwork
+import com.dionisispx.expensetracker.data.remote.VisionRequest
 import com.dionisispx.expensetracker.domain.model.Expense
 import com.dionisispx.expensetracker.presentation.ExpenseViewModel
-import com.googlecode.tesseract.android.TessBaseAPI
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileOutputStream
+import kotlin.math.roundToInt
+import androidx.activity.result.PickVisualMediaRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,15 +92,33 @@ fun AddExpenseScreen(
     var storeName by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("Other") }
+    var isConfirmingScan by remember { mutableStateOf(false) }
+
+    // Fetch the smart dictionary from the view model
+    val userDictionary by viewModel.userDictionary.collectAsState()
 
     val tabs = listOf("Κάμερα", "Χειροκίνητη προσθήκη")
+
+    // Handle navigation back logic based on current state
+    val handleBackPress = {
+        if (isConfirmingScan) {
+            isConfirmingScan = false
+            storeName = ""
+            amount = ""
+            category = "Other"
+        } else {
+            onNavigateBack()
+        }
+    }
+
+    BackHandler(onBack = handleBackPress)
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("LOGO", fontWeight = FontWeight.Bold) },
                 actions = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = handleBackPress) {
                         Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
                     }
                 }
@@ -99,24 +126,40 @@ fun AddExpenseScreen(
         }
     ) { innerPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-            TabRow(selectedTabIndex = selectedTab) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        text = { Text(title, fontWeight = FontWeight.Bold) }
-                    )
+
+            // Hide tabs if the user is confirming a scan
+            if (!isConfirmingScan) {
+                TabRow(selectedTabIndex = selectedTab) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTab == index,
+                            onClick = { selectedTab = index },
+                            text = { Text(title, fontWeight = FontWeight.Bold) }
+                        )
+                    }
                 }
             }
 
             Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                if (selectedTab == 0) {
+                if (isConfirmingScan) {
+                    ManualExpenseForm(
+                        storeName = storeName,
+                        onStoreNameChange = { storeName = it },
+                        amount = amount,
+                        onAmountChange = { amount = it },
+                        category = category,
+                        onCategoryChange = { category = it },
+                        onNavigateBack = onNavigateBack,
+                        viewModel = viewModel
+                    )
+                } else if (selectedTab == 0) {
                     CameraUI(
+                        userDictionary = userDictionary,
                         onScanComplete = { scannedStore, scannedAmount, scannedCategory ->
                             storeName = scannedStore
                             amount = scannedAmount
                             category = scannedCategory
-                            selectedTab = 1
+                            isConfirmingScan = true
                         }
                     )
                 } else {
@@ -137,14 +180,14 @@ fun AddExpenseScreen(
 }
 
 @Composable
-fun CameraUI(onScanComplete: (String, String, String) -> Unit) {
+fun CameraUI(
+    userDictionary: Map<String, String>,
+    onScanComplete: (String, String, String) -> Unit
+) {
     val context = LocalContext.current
     val imageCapture = remember { ImageCapture.Builder().build() }
 
-    // NEW: System Sound functionality
     val sound = remember { MediaActionSound().apply { load(MediaActionSound.SHUTTER_CLICK) } }
-
-    // NEW: Processing state for loading UI
     var isProcessing by remember { mutableStateOf(false) }
 
     var hasCameraPermission by remember {
@@ -154,6 +197,20 @@ fun CameraUI(onScanComplete: (String, String, String) -> Unit) {
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted -> hasCameraPermission = isGranted }
+    )
+
+    // Launcher for photo picker
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            if (uri != null) {
+                isProcessing = true
+                processImageWithCloudVision(context, uri, userDictionary) { store, amount, category ->
+                    isProcessing = false
+                    onScanComplete(store, amount, category)
+                }
+            }
+        }
     )
 
     LaunchedEffect(Unit) {
@@ -169,7 +226,6 @@ fun CameraUI(onScanComplete: (String, String, String) -> Unit) {
             }
         }
 
-        // NEW: Loading Overlay (Covers the screen while parsing)
         if (isProcessing) {
             Box(
                 modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.7f)),
@@ -178,7 +234,7 @@ fun CameraUI(onScanComplete: (String, String, String) -> Unit) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Ανάλυση απόδειξης...", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Ανάλυση απόδειξης με AI...", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -190,22 +246,21 @@ fun CameraUI(onScanComplete: (String, String, String) -> Unit) {
         ) {
             Spacer(modifier = Modifier.weight(1f))
 
-            // The Shutter Button
             Box(
                 modifier = Modifier
                     .size(80.dp)
                     .border(4.dp, if (isProcessing) Color.Gray else Color.White, CircleShape)
                     .padding(8.dp)
                     .background(if (isProcessing) Color.Gray.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.5f), CircleShape)
-                    .clickable(enabled = !isProcessing) { // Disable clicks while processing!
-                        sound.play(MediaActionSound.SHUTTER_CLICK) // Play sound!
-                        isProcessing = true // Show loading
+                    .clickable(enabled = !isProcessing) {
+                        sound.play(MediaActionSound.SHUTTER_CLICK)
+                        isProcessing = true
                         takePhoto(
                             context = context,
                             imageCapture = imageCapture,
                             onPhotoTaken = { uri ->
-                                processImageWithTesseract(context, uri) { store, amount, category ->
-                                    isProcessing = false // Hide loading
+                                processImageWithCloudVision(context, uri, userDictionary) { store, amount, category ->
+                                    isProcessing = false
                                     onScanComplete(store, amount, category)
                                 }
                             }
@@ -214,7 +269,13 @@ fun CameraUI(onScanComplete: (String, String, String) -> Unit) {
             )
 
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                IconButton(onClick = { /* TODO */ }, enabled = !isProcessing) {
+                IconButton(
+                    onClick = {
+                        // Launch the photo picker filtering for images only
+                        galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    },
+                    enabled = !isProcessing
+                ) {
                     Icon(imageVector = Icons.Default.PhotoLibrary, contentDescription = "Gallery", tint = if (isProcessing) Color.Gray else Color.White, modifier = Modifier.size(32.dp))
                 }
             }
@@ -237,18 +298,22 @@ fun ManualExpenseForm(
     Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         OutlinedTextField(
             value = storeName, onValueChange = onStoreNameChange,
-            label = { Text("Store Name (e.g. Supermarket)") }, modifier = Modifier.fillMaxWidth(), singleLine = true
+            label = { Text("Όνομα Καταστήματος") },
+            placeholder = { Text("π.χ. ΣΚΛΑΒΕΝΙΤΗΣ", color = Color.Gray) },
+            modifier = Modifier.fillMaxWidth(), singleLine = true
         )
 
         OutlinedTextField(
             value = amount, onValueChange = onAmountChange,
-            label = { Text("Amount (€)") }, modifier = Modifier.fillMaxWidth(),
+            label = { Text("Ποσό (€)") },
+            placeholder = { Text("π.χ. 9.99", color = Color.Gray) },
+            modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true
         )
 
         ExposedDropdownMenuBox(expanded = isDropdownExpanded, onExpandedChange = { isDropdownExpanded = !isDropdownExpanded }) {
             OutlinedTextField(
-                value = category, onValueChange = {}, readOnly = true, label = { Text("Category") },
+                value = category, onValueChange = {}, readOnly = true, label = { Text("Κατηγορία") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) },
                 colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(), modifier = Modifier.menuAnchor().fillMaxWidth()
             )
@@ -274,7 +339,7 @@ fun ManualExpenseForm(
     }
 }
 
-// --- HELPER FUNCTIONS ---
+// Helper functions
 
 private fun takePhoto(context: Context, imageCapture: ImageCapture, onPhotoTaken: (Uri) -> Unit) {
     val photoFile = File(context.cacheDir, "receipt_${System.currentTimeMillis()}.jpg")
@@ -289,29 +354,44 @@ private fun takePhoto(context: Context, imageCapture: ImageCapture, onPhotoTaken
     })
 }
 
-private fun prepareTesseract(context: Context): String {
-    val tessDir = File(context.filesDir, "tessdata")
-    if (!tessDir.exists()) tessDir.mkdirs()
-    val languages = listOf("ell.traineddata", "eng.traineddata")
-    for (lang in languages) {
-        val trainedDataFile = File(tessDir, lang)
-        if (!trainedDataFile.exists()) {
-            context.assets.open("tessdata/$lang").use { input -> FileOutputStream(trainedDataFile).use { output -> input.copyTo(output) } }
-        }
-    }
-    return context.filesDir.absolutePath
+// Visual character normalizer for greek ocr mistakes
+private fun normalizeForFuzzy(input: String): String {
+    return input.uppercase()
+        .replace("V", "Ψ")
+        .replace("S", "Σ")
+        .replace("C", "Σ")
+        .replace("E", "Ε")
+        .replace("N", "Ν")
+        .replace("I", "Ι")
+        .replace("O", "Ο")
+        .replace("P", "Ρ")
+        .replace("A", "Α")
+        .replace("T", "Τ")
+        .replace("H", "Η")
+        .replace("K", "Κ")
+        .replace("M", "Μ")
+        .replace("X", "Χ")
+        .replace("Y", "Υ")
+        .replace("Z", "Ζ")
+        .replace("B", "Β")
+        .replace("U", "Υ")
 }
 
-private fun processImageWithTesseract(context: Context, uri: Uri, onScanComplete: (String, String, String) -> Unit) {
+// Google cloud vision api integration
+private fun processImageWithCloudVision(
+    context: Context,
+    uri: Uri,
+    userDictionary: Map<String, String>,
+    onScanComplete: (String, String, String) -> Unit
+) {
     CoroutineScope(Dispatchers.IO).launch {
         try {
-            val dataPath = prepareTesseract(context)
             var inputStream = context.contentResolver.openInputStream(uri)
             val originalBitmap = BitmapFactory.decodeStream(inputStream)
             inputStream?.close()
 
             if (originalBitmap != null) {
-                // 1. Διορθώνουμε το Orientation
+                // Correct orientation
                 inputStream = context.contentResolver.openInputStream(uri)
                 val exif = ExifInterface(inputStream!!)
                 val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
@@ -324,92 +404,219 @@ private fun processImageWithTesseract(context: Context, uri: Uri, onScanComplete
                     ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
                 }
 
-                // 2. Μικραίνουμε την εικόνα για ταχύτητα
-                val maxDimension = 1500f
+                // Scale image down
+                val maxDimension = 1024f
                 val scale = minOf(maxDimension / originalBitmap.width, maxDimension / originalBitmap.height)
 
                 if (scale < 1f) {
                     matrix.postScale(scale, scale)
                 }
-
                 val processedBitmap = Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.width, originalBitmap.height, matrix, true)
 
-                val tessAPI = TessBaseAPI()
-                if (tessAPI.init(dataPath, "ell+eng")) {
-                    tessAPI.setImage(processedBitmap)
-                    val extractedText = tessAPI.utF8Text
-                    tessAPI.recycle()
+                // Convert to base64
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                processedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream)
+                val imageBytes = byteArrayOutputStream.toByteArray()
+                val base64Image = Base64.encodeToString(imageBytes, Base64.NO_WRAP)
 
-                    // ==========================================
-                    // ΕΔΩ ΕΙΝΑΙ ΤΑ LOGS ΠΟΥ ΕΙΧΑΜΕ ΧΑΣΕΙ!
-                    // ==========================================
-                    Log.d("Tesseract", "====================================")
-                    Log.d("Tesseract", "TESSERACT FOUND TEXT:\n$extractedText")
-                    Log.d("Tesseract", "====================================")
+                // Prepare request
+                val request = VisionRequest(
+                    requests = listOf(
+                        AnnotateImageRequest(
+                            image = VisionImage(content = base64Image),
+                            features = listOf(Feature(type = "DOCUMENT_TEXT_DETECTION"))
+                        )
+                    )
+                )
 
-                    // Parse the text!
-                    val (store, parsedAmount, category) = extractDataFromText(extractedText)
+                val apiKey = com.dionisispx.expensetracker.BuildConfig.VISION_API_KEY
 
-                    // Switch back to the Main Thread to update the UI
-                    withContext(Dispatchers.Main) {
-                        onScanComplete(store, parsedAmount, category)
-                    }
+                Log.d("CloudVision", "Uploading image to Google Vision API...")
+                val response = VisionNetwork.api.annotateImage(apiKey, request)
+
+                val extractedText = response.responses?.firstOrNull()?.textAnnotations?.firstOrNull()?.description ?: ""
+
+                Log.d("CloudVision", "Found text")
+                Log.d("CloudVision", extractedText)
+
+                val (store, parsedAmount, category) = extractDataFromText(extractedText, userDictionary)
+
+                withContext(Dispatchers.Main) {
+                    onScanComplete(store, parsedAmount, category)
                 }
             }
         } catch (e: Exception) {
-            Log.e("Tesseract", "Error", e)
+            Log.e("CloudVision", "Network or Parsing Error", e)
             withContext(Dispatchers.Main) { onScanComplete("", "", "Other") }
         }
     }
 }
 
-// ---------------------------------------------------------------------
-// THE AI PARSER: SMART LINE-BY-LINE ALGORITHM (V4 - Tuned Heuristics)
-// ---------------------------------------------------------------------
-private fun extractDataFromText(text: String): Triple<String, String, String> {
+// Fuzzy string matching algorithms
+private fun similarity(s1: String, s2: String): Double {
+    var longer = s1
+    var shorter = s2
+    if (s1.length < s2.length) {
+        longer = s2
+        shorter = s1
+    }
+    val longerLength = longer.length
+    if (longerLength == 0) return 1.0
+    return (longerLength - levenshteinDistance(longer, shorter)) / longerLength.toDouble()
+}
+
+private fun levenshteinDistance(lhs: CharSequence, rhs: CharSequence): Int {
+    val len0 = lhs.length + 1
+    val len1 = rhs.length + 1
+    var cost = IntArray(len0)
+    var newcost = IntArray(len0)
+    for (i in 0 until len0) cost[i] = i
+    for (j in 1 until len1) {
+        newcost[0] = j
+        for (i in 1 until len0) {
+            val match = if (lhs[i - 1] == rhs[j - 1]) 0 else 1
+            val costReplace = cost[i - 1] + match
+            val costInsert = cost[i] + 1
+            val costDelete = newcost[i - 1] + 1
+            newcost[i] = minOf(minOf(costInsert, costDelete), costReplace)
+        }
+        val swap = cost
+        cost = newcost
+        newcost = swap
+    }
+    return cost[len0 - 1]
+}
+
+// Ai parser logic
+private fun extractDataFromText(
+    text: String,
+    userDictionary: Map<String, String>
+): Triple<String, String, String> {
     var finalStore = ""
     var finalAmount = ""
     var finalCategory = "Other"
 
     val upperText = text.uppercase()
 
-    // 1. SEED DICTIONARY (Εμπλουτισμένο με τα λάθη του Tesseract!)
-    val knownStores = mapOf(
+    // Strip quotes and brackets to help fuzzy matching find exact words
+    val cleanTextForNames = upperText.replace("\"", "").replace("'", "").replace("«", "").replace("»", "")
+    val words = cleanTextForNames.split(Regex("\\s+")).filter { it.isNotBlank() }
+
+    // Seed dictionary
+    val seedDictionary = mapOf(
         "ΣΚΛΑΒΕΝΙΤΗΣ" to "Groceries",
         "ΓΑΛΑΞΙΑΣ" to "Groceries",
-        "ΓΩΛΩ" to "Groceries", // Typo για ΓΑΛΑΞΙΑΣ
-        "ΓΩΔΩ" to "Groceries", // Typo για ΓΑΛΑΞΙΑΣ
-        "ΒΑΣΙΛΟΠΟΥΛΟΣ" to "Groceries",
+        "ΑΒ ΒΑΣΙΛΟΠΟΥΛΟΣ" to "Groceries",
         "ΜΑΣΟΥΤΗΣ" to "Groceries",
+        "ΚΡΗΤΙΚΟΣ" to "Groceries",
+        "LIDL" to "Groceries",
+
         "ZARA" to "Shopping",
+        "H&M" to "Shopping",
+        "PULL&BEAR" to "Shopping",
+        "BERSHKA" to "Shopping",
+        "NIKE" to "Shopping",
+        "ADIDAS" to "Shopping",
+        "COSMOS SPORT" to "Shopping",
+        "JD" to "Shopping",
+        "PLAISIO" to "Shopping",
+        "PUBLIC" to "Shopping",
+        "ΚΩΤΣΟΒΟΛΟΣ" to "Shopping",
+        "ΓΕΡΜΑΝΟΣ" to "Shopping",
+
+        "VILLAGE" to "Entertainment",
+        "OPTIONS" to "Entertainment",
+
+        "OASA" to "Transport & Fuel",
+        "ΣΤΑΣΥ" to "Transport & Fuel",
         "EKO" to "Transport & Fuel",
+        "BP" to "Transport & Fuel",
         "SHELL" to "Transport & Fuel",
+        "ETEKA" to "Transport & Fuel",
+        "REVOIL" to "Transport & Fuel",
+        "ΕΛΙΝ" to "Transport & Fuel",
+        "AVIN" to "Transport & Fuel",
+
         "ΓΡΗΓΟΡΗΣ" to "Food & Drink",
-        "EVEREST" to "Food & Drink"
+        "EVEREST" to "Food & Drink",
+        "COFFEE ISLAND" to "Food & Drink",
+        "IL TOTO" to "Food & Drink",
+        "STARBUCKS" to "Food & Drink",
+        "COFFEE BERRY" to "Food & Drink",
+        "MCDONALD'S" to "Food & Drink",
+        "JACKAROO" to "Food & Drink",
+        "KFC" to "Food & Drink",
+        "PIZZA FAN" to "Food & Drink",
+        "DOMINO'S" to "Food & Drink",
+        "PIZZA HUT" to "Food & Drink",
+        "GOODY'S" to "Food & Drink",
+        "BREAD FACTORY" to "Food & Drink",
+        "ΣΤΕΡΓΙΟΥ" to "Food & Drink",
+        "NANOU" to "Food & Drink",
+
+        "YAVA" to "Health & Fitness",
+        "PLANET FITNESS" to "Health & Fitness",
+        "ALTERLIFE" to "Health & Fitness",
+
+        "COSMOTE" to "Bills & Utilities",
+        "NOVA" to "Bills & Utilities",
+        "VODAFONE" to "Bills & Utilities",
+        "INALAN" to "Bills & Utilities",
+        "ΔΕΗ" to "Bills & Utilities",
+        "PROTERGIA" to "Bills & Utilities",
+        "ΕΥΔΑΠ" to "Bills & Utilities"
+
     )
 
-    for ((store, category) in knownStores) {
-        if (upperText.contains(store) || upperText.replace(" ", "").contains(store)) {
-            // Αν βρει το "ΓΩΛΩ", θέλουμε να τυπώσει το σωστό όνομα "ΓΑΛΑΞΙΑΣ", όχι το λάθος!
-            finalStore = if (store == "ΓΩΛΩ" || store == "ΓΩΔΩ") "ΓΑΛΑΞΙΑΣ" else store
-            finalCategory = category
-            break
+    // Combine dictionaries
+    val combinedDictionary = seedDictionary + userDictionary
+
+    // Store extraction using multi-word phrase matching
+    var bestMatchScore = 0.0
+
+    val phrases = mutableListOf<String>()
+    for (i in words.indices) {
+        phrases.add(words[i])
+        if (i < words.size - 1) phrases.add("${words[i]} ${words[i+1]}")
+        if (i < words.size - 2) phrases.add("${words[i]} ${words[i+1]} ${words[i+2]}")
+        if (i < words.size - 3) phrases.add("${words[i]} ${words[i+1]} ${words[i+2]} ${words[i+3]}")
+    }
+
+    for (phrase in phrases) {
+        if (phrase.length < 3) continue
+
+        for ((store, category) in combinedDictionary) {
+
+            val normalizedPhrase = normalizeForFuzzy(phrase)
+            val normalizedStore = normalizeForFuzzy(store)
+
+            // Check if exact match, otherwise calculate fuzzy score
+            val isExactMatch = normalizedPhrase.replace(" ", "") == normalizedStore.replace(" ", "")
+            val score = if (isExactMatch) 1.0 else similarity(normalizedPhrase, normalizedStore)
+
+            // Only update if the new score is higher than the best score we have
+            if (score > 0.70 && score > bestMatchScore) {
+                bestMatchScore = score
+                finalStore = store
+                finalCategory = category
+            }
         }
     }
 
-    // 2. SMART AMOUNT EXTRACTION
+    // Smart amount extraction
     val lines = upperText.lines().map { it.trim() }.filter { it.isNotEmpty() }
-    val priceRegex = Regex("\\d+[.,]\\d{2}")
 
-    // --- ΛΙΣΤΕΣ ΜΕ ΤΑ ΛΑΘΗ ΤΟΥ TESSERACT (Ενημερωμένες από τα Logs σου) ---
+    // Negative lookbehinds and lookaheads ensure we do not match digits glued to other characters
+    val priceRegex = Regex("(?<!\\d)\\d+[.,]\\d{2}(?!\\d)")
+
     val totalKeywords = listOf(
-        "ΣΥΝΟΛΟ", "ΣΥΝΩΛΔΟ", "TOTAL", "ΜΕΡΙΚΟ", "ΣΥΝ.", "EYNOAO", "ZYNOAO",
-        "2YNOAO", "XYNOAO", "XY NOAO", "LYNOAO", "ZYN.",
-        "XZXYNOAO", "ΣΥΝΩΛΑΟ", "ΞΣΥΝΩΛΟ", "ΣΥΝΩΛΟ", "MEPIKO"
+        "ΣΥΝΟΛΟ", "ΤΕΛΙΚΟ ΣΥΝΟΛΟ", "ΜΕΡΙΚΟ ΣΥΝΟΛΟ", "ΣΥΝΟΛΟ €", "TOTAL"
     )
 
     val ignoreKeywords = listOf(
-        "ΜΕΤΡΗΤΑ", "ΡΕΣΤΑ", "CASH", "METPHTA", "PEETA", "METP.", "CHANGE", "KAPTA"
+        "ΜΕΤΡΗΤΑ", "ΚΑΡΤΑ", "ΠΙΣΤΩΤΙΚΗ ΚΑΡΤΑ", "ΠΛΗΡΩΜΗ ΜΕ ΚΑΡΤΑ",
+        "ΑΜΕΣΗ ΚΑΡΤΑ", "ΚΑΡΤΑ-1", "Π. ΚΑΡΤΑ", "ΠΙΣΤ. ΚΑΡΤΑ",
+        "ΡΕΣΤΑ", "CHANGE", "ΤΗΛ", "ΑΦΜ", "ΔΟΥ", "CARD"
     )
 
     for (i in lines.indices) {
@@ -421,34 +628,36 @@ private fun extractDataFromText(text: String): Triple<String, String, String> {
         val containsIgnore = ignoreKeywords.any { line.contains(it) || normalizedLine.contains(it.replace(" ", "")) }
 
         if (containsTotal && !containsIgnore) {
-
             var matches = priceRegex.findAll(line).toList()
 
-            // Αν δεν βρούμε στην ίδια γραμμή, κοιτάμε στην επόμενη
             if (matches.isEmpty() && i + 1 < lines.size) {
                 matches = priceRegex.findAll(lines[i + 1]).toList()
             }
 
             if (matches.isNotEmpty()) {
-                finalAmount = matches.last().value.replace(",", ".")
+                finalAmount = matches.last().value.replace(",", ".").replace("-", ".")
                 break
             }
         }
     }
 
-    // 3. THE SAFE FALLBACK
+    // Safe fallback using mathematical triangulation
     if (finalAmount.isEmpty()) {
         val validNumbers = mutableListOf<Double>()
 
         for (line in lines) {
             val normalizedLine = line.replace(" ", "").replace("0", "Ο")
             val containsIgnore = ignoreKeywords.any { line.contains(it) || normalizedLine.contains(it.replace(" ", "")) }
-            if (containsIgnore) continue
+
+            // Exclude lines with explicit percentages or item multipliers
+            if (containsIgnore || line.contains("X") || line.contains("Χ") || line.contains("%")) continue
 
             val matches = priceRegex.findAll(line)
             for (match in matches) {
-                val num = match.value.replace(",", ".").toDoubleOrNull() ?: 0.0
-                // Αγνοούμε τα ποσοστά ΦΠΑ (13, 24, 6) και τα μηδενικά
+                val normalizedStr = match.value.replace(",", ".").replace("-", ".")
+                val num = normalizedStr.toDoubleOrNull() ?: 0.0
+
+                // Hard exclude greek vat rates and zero
                 if (num != 13.00 && num != 24.00 && num != 6.00 && num != 0.0) {
                     validNumbers.add(num)
                 }
@@ -456,8 +665,39 @@ private fun extractDataFromText(text: String): Triple<String, String, String> {
         }
 
         if (validNumbers.isNotEmpty()) {
-            val maxNum = validNumbers.maxOrNull() ?: 0.0
-            finalAmount = String.format(java.util.Locale.US, "%.2f", maxNum)
+            // Analyze the last 4 numbers as they usually contain the total block
+            val tail = validNumbers.takeLast(4)
+            var foundByMath = false
+
+            // Scenario a card payment where amount appears twice
+            for (i in 0 until tail.size - 1) {
+                if (tail[i] == tail[i+1]) {
+                    finalAmount = String.format(java.util.Locale.US, "%.2f", tail[i])
+                    foundByMath = true
+                    break
+                }
+            }
+
+            // Scenario b cash payment where total plus change is cash given
+            if (!foundByMath && tail.size >= 3) {
+                val a = tail[tail.size - 3]
+                val b = tail[tail.size - 2]
+                val c = tail[tail.size - 1]
+
+                // Floating point math check to avoid rounding errors
+                val sumAC = ((a + c) * 100).roundToInt() / 100.0
+
+                if (sumAC == b) {
+                    finalAmount = String.format(java.util.Locale.US, "%.2f", a)
+                    foundByMath = true
+                }
+            }
+
+            // Scenario c fallback to max number
+            if (!foundByMath) {
+                val maxNum = validNumbers.maxOrNull() ?: 0.0
+                finalAmount = String.format(java.util.Locale.US, "%.2f", maxNum)
+            }
         }
     }
 

@@ -20,9 +20,13 @@ interface ExpenseDao {
     @Delete
     suspend fun deleteExpense(expense: Expense): Int
 
+    // Get all expenses
+    @Query("SELECT * FROM expenses_table")
+    fun getAllExpenses(): Flow<List<Expense>>
+
     // Get all expenses ordered by newest first
     @Query("SELECT * FROM expenses_table ORDER BY date DESC")
-    fun getAllExpenses(): Flow<List<Expense>>
+    fun getAllExpensesDescending(): Flow<List<Expense>>
 
     // Get expenses only for a specific month
     @Query("SELECT * FROM expenses_table WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")

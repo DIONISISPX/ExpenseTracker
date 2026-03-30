@@ -7,8 +7,11 @@ import com.dionisispx.expensetracker.domain.repository.ExpenseRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.YearMonth
 import java.time.ZoneId
@@ -25,6 +28,20 @@ class ExpenseViewModel @Inject constructor(
     // State to hold the currently selected month and year
     private val _currentMonth = MutableStateFlow(YearMonth.now())
     val currentMonth: StateFlow<YearMonth> = _currentMonth.asStateFlow()
+
+    // Auto-learning dictionary (Builds a map from all DB expenses)
+    val userDictionary: StateFlow<Map<String, String>> = repository.getAllExpenses()
+        .map { allExpenses ->
+            val dict = mutableMapOf<String, String>()
+            // Sort by date (oldest first). This ensures that if a user changes
+            // a store's category later on, the newest category overwrites the old one
+            allExpenses.sortedBy { it.date }.forEach { expense ->
+                // Uppercase to match the OCR output format perfectly
+                dict[expense.storeName.uppercase()] = expense.category
+            }
+            dict
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     // Keeps track of the active database query
     private var currentJob: Job? = null
