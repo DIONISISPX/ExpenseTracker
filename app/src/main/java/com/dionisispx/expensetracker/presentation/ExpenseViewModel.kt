@@ -29,12 +29,19 @@ class ExpenseViewModel @Inject constructor(
     private val _currentMonth = MutableStateFlow(YearMonth.now())
     val currentMonth: StateFlow<YearMonth> = _currentMonth.asStateFlow()
 
-    // Auto-learning dictionary (Builds a map from all DB expenses)
+    // State to hold the currently selected year for the history tab
+    private val _currentYear = MutableStateFlow(YearMonth.now().year)
+    val currentYear: StateFlow<Int> = _currentYear.asStateFlow()
+
+    // State to hold all expenses for the selected year
+    private val _yearlyExpenses = MutableStateFlow<List<Expense>>(emptyList())
+    val yearlyExpenses: StateFlow<List<Expense>> = _yearlyExpenses.asStateFlow()
+
+    // Auto learning dictionary builds a map from all DB expenses
     val userDictionary: StateFlow<Map<String, String>> = repository.getAllExpenses()
         .map { allExpenses ->
             val dict = mutableMapOf<String, String>()
-            // Sort by date (oldest first). This ensures that if a user changes
-            // a store's category later on, the newest category overwrites the old one
+            // Sort by date (oldest first) to ensure newest category overwrites the old one
             allExpenses.sortedBy { it.date }.forEach { expense ->
                 // Uppercase to match the OCR output format perfectly
                 dict[expense.storeName.uppercase()] = expense.category
@@ -43,29 +50,54 @@ class ExpenseViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    // Keeps track of the active database query
-    private var currentJob: Job? = null
+    // Keeps track of the active database queries
+    private var currentMonthJob: Job? = null
+    private var currentYearJob: Job? = null
 
     init {
-        // Whenever the month changes, automatically fetch the new data
+        // Whenever the month changes automatically fetch the new data
         viewModelScope.launch {
             _currentMonth.collect { month ->
                 loadExpensesForMonth(month)
+            }
+        }
+
+        // Listen for year changes and fetch yearly data
+        viewModelScope.launch {
+            _currentYear.collect { year ->
+                loadExpensesForYear(year)
             }
         }
     }
 
     // Fetches expenses for a whole month
     private fun loadExpensesForMonth(yearMonth: YearMonth) {
-        currentJob?.cancel() // Cancel previous fetch if user clicks arrows too fast
-        currentJob = viewModelScope.launch {
-            // Convert the 1st of the month to milliseconds
+        // Cancel previous fetch if user clicks arrows too fast
+        currentMonthJob?.cancel()
+        currentMonthJob = viewModelScope.launch {
+            // Convert the first day of the month to milliseconds
             val startOfMonth = yearMonth.atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
             // Convert the last day of the month to milliseconds
             val endOfMonth = yearMonth.atEndOfMonth().atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
             repository.getExpensesByDateRange(startOfMonth, endOfMonth).collect { expenseList ->
                 _expenses.value = expenseList
+            }
+        }
+    }
+
+    // Fetches expenses for an entire year
+    private fun loadExpensesForYear(year: Int) {
+        // Cancel previous fetch if user clicks arrows too fast
+        currentYearJob?.cancel()
+        currentYearJob = viewModelScope.launch {
+            // Convert the first day of the year to milliseconds
+            val startOfYear = YearMonth.of(year, 1).atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            // Convert the last day of the year to milliseconds
+            val endOfYear = YearMonth.of(year, 12).atEndOfMonth().atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            repository.getExpensesByDateRange(startOfYear, endOfYear).collect { expenseList ->
+                _yearlyExpenses.value = expenseList
             }
         }
     }
@@ -78,6 +110,16 @@ class ExpenseViewModel @Inject constructor(
     // Move to the previous month
     fun previousMonth() {
         _currentMonth.value = _currentMonth.value.minusMonths(1)
+    }
+
+    // Move to the next year
+    fun nextYear() {
+        _currentYear.value += 1
+    }
+
+    // Move to the previous year
+    fun previousYear() {
+        _currentYear.value -= 1
     }
 
     fun addExpense(expense: Expense) {
