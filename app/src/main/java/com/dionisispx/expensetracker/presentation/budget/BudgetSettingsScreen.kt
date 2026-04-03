@@ -53,6 +53,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,29 +69,43 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.dionisispx.expensetracker.presentation.ExpenseViewModel
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BudgetSettingsScreen(
     onNavigateBack: () -> Unit,
-    onSave: () -> Unit = {}
+    viewModel: ExpenseViewModel = hiltViewModel()
 ) {
-    // Top level budget state
-    var overallBudgetInput by remember { mutableStateOf("1000") }
+    // Observe database values
+    val savedTotalBudget by viewModel.totalBudget.collectAsState()
+    val savedCategoryLimits by viewModel.categoryLimits.collectAsState()
+
+    // Local state variables for input handling
+    var overallBudgetInput by remember { mutableStateOf("") }
+    var categoryLimits by remember { mutableStateOf<Map<String, Float>>(emptyMap()) }
+    var isInitialized by remember { mutableStateOf(false) }
+
+    // Load data once when it arrives from viewmodel
+    LaunchedEffect(savedTotalBudget, savedCategoryLimits) {
+        if (!isInitialized && savedTotalBudget > 0f) {
+            overallBudgetInput = savedTotalBudget.toInt().toString()
+            categoryLimits = savedCategoryLimits
+            isInitialized = true
+        }
+    }
+
     val overallBudget = overallBudgetInput.toFloatOrNull() ?: 0f
 
     // Toggle between euro and percent modes
     var isPercentMode by remember { mutableStateOf(false) }
 
-    // Map to hold the limits in raw euros
-    var categoryLimits by remember { mutableStateOf(mapOf<String, Float>()) }
-
-    // Define categories with their specific icons and pastel colors
+    // Define categories with their specific icons and colors
     val categories = listOf(
         CategoryData("Groceries", Icons.Default.ShoppingCart, Color(0xFFC8E6C9)),
         CategoryData("Food & Drink", Icons.Default.Restaurant, Color(0xFFFFCCBC)),
@@ -115,7 +131,10 @@ fun BudgetSettingsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onSave) {
+                    IconButton(onClick = {
+                        viewModel.saveBudgetAndLimits(overallBudget, categoryLimits)
+                        onNavigateBack()
+                    }) {
                         Icon(imageVector = Icons.Default.Check, contentDescription = "Save", tint = MaterialTheme.colorScheme.primary)
                     }
                 }
@@ -130,13 +149,13 @@ fun BudgetSettingsScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // Overall monthly budget section white card
+            // Overall monthly budget section card using surfaceVariant for dark mode contrast
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
@@ -152,7 +171,7 @@ fun BudgetSettingsScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Minimalist integer input with logic to clear categories if budget shrinks too much
+                    // Integer input with logic to clear categories if total budget becomes smaller than allocated limits
                     MinimalistIntegerInput(
                         value = overallBudgetInput,
                         onValueChange = { input ->
@@ -189,7 +208,7 @@ fun BudgetSettingsScreen(
                     Text(
                         text = "(optional)",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -205,19 +224,19 @@ fun BudgetSettingsScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Main list container
+            // Main list container card using surfaceVariant for dark mode contrast
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .padding(bottom = 32.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
 
-                    // Reset Button and Remaining Tracker inside the container
+                    // Reset button and remaining tracker
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -238,7 +257,7 @@ fun BudgetSettingsScreen(
                         Text(
                             text = remainingText,
                             style = MaterialTheme.typography.labelLarge,
-                            color = if (remainingEur <= 0f) MaterialTheme.colorScheme.error else Color.Gray,
+                            color = if (remainingEur <= 0f) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Bold
                         )
 
@@ -250,11 +269,11 @@ fun BudgetSettingsScreen(
                         }
                     }
 
-                    Divider(color = Color.LightGray.copy(alpha = 0.5f), modifier = Modifier.padding(horizontal = 16.dp))
+                    Divider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f), modifier = Modifier.padding(horizontal = 16.dp))
 
                     categories.forEachIndexed { index, categoryData ->
 
-                        // Calculate mathematical maximum allowed for this specific category
+                        // Calculate maximum allowed limit for this specific category
                         val currentLimit = categoryLimits[categoryData.name] ?: 0f
                         val otherCategoriesSum = categoryLimits.filterKeys { it != categoryData.name }.values.sum()
                         val maxAllowedEurForCategory = (overallBudget - otherCategoriesSum).coerceAtLeast(0f)
@@ -271,9 +290,9 @@ fun BudgetSettingsScreen(
                             }
                         )
 
-                        // Add a subtle divider between items except for the last one
+                        // Add divider between items except for the last one
                         if (index < categories.size - 1) {
-                            Divider(color = Color.LightGray.copy(alpha = 0.5f), modifier = Modifier.padding(start = 72.dp, end = 16.dp))
+                            Divider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f), modifier = Modifier.padding(start = 72.dp, end = 16.dp))
                         }
                     }
                 }
@@ -302,12 +321,12 @@ fun CategoryLimitRow(
         currentLimitEur.toInt().toFloat()
     }
 
-    // Format state for text field to show integers smoothly
+    // Format state for text field to show integers
     var textFieldValue by remember(displayValue, isPercentMode) {
         mutableStateOf(if (displayValue == 0f) "" else displayValue.toInt().toString())
     }
 
-    // Dynamic max value tightly caps input to prevent exceeding 100 percent of total budget
+    // Dynamic maximum value caps input to prevent exceeding total budget
     val currentMax = if (isPercentMode) {
         if (overallBudget > 0f) ((maxAllowedEur / overallBudget) * 100f).toLong() else 0L
     } else {
@@ -353,7 +372,7 @@ fun CategoryLimitRow(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Customized slider with vertical line handle
+                // Slider with custom vertical handle
                 Slider(
                     value = displayValue,
                     onValueChange = { newValue ->
@@ -371,7 +390,7 @@ fun CategoryLimitRow(
                         .padding(end = 16.dp),
                     colors = SliderDefaults.colors(
                         activeTrackColor = MaterialTheme.colorScheme.primary,
-                        inactiveTrackColor = Color.LightGray.copy(alpha = 0.5f)
+                        inactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                     ),
                     thumb = {
                         Box(
@@ -382,7 +401,7 @@ fun CategoryLimitRow(
                     }
                 )
 
-                // Fixed width container for input prevents layout from shifting
+                // Fixed width container for input
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.width(90.dp)
@@ -407,7 +426,7 @@ fun CategoryLimitRow(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // Conversion helper text reserves space even when empty
+                    // Conversion helper text
                     val conversionText = if (currentLimitEur > 0f) {
                         if (isPercentMode) {
                             "${currentLimitEur.toInt()} €"
@@ -423,7 +442,7 @@ fun CategoryLimitRow(
                     Text(
                         text = conversionText,
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                         modifier = Modifier.height(16.dp)
@@ -434,7 +453,7 @@ fun CategoryLimitRow(
     }
 }
 
-// Fixed width integer input component that completely eliminates horizontal scroll bugs
+// Custom integer input component
 @Composable
 fun MinimalistIntegerInput(
     value: String,
@@ -452,15 +471,14 @@ fun MinimalistIntegerInput(
         BasicTextField(
             value = value,
             onValueChange = { input ->
-                // Strip out any non digits
+                // Strip out non digits
                 var cleanInput = input.filter { it.isDigit() }
 
-                // Enforce dynamic limits perfectly
+                // Enforce dynamic limits
                 val parsedVal = cleanInput.toLongOrNull() ?: 0L
                 if (parsedVal > maxValue) {
                     cleanInput = maxValue.toString()
                 }
-
                 onValueChange(cleanInput)
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -483,7 +501,7 @@ fun MinimalistIntegerInput(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(if (fontSize.value > 20f) 2.dp else 1.dp)
-                            .background(Color.Gray.copy(alpha = 0.5f))
+                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                     )
                 }
             }
@@ -498,13 +516,5 @@ fun MinimalistIntegerInput(
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = if (fontSize.value > 20f) 4.dp else 2.dp)
         )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun BudgetSettingsScreenPreview() {
-    MaterialTheme {
-        BudgetSettingsScreen(onNavigateBack = {})
     }
 }

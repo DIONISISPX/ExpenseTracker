@@ -1,25 +1,38 @@
 package com.dionisispx.expensetracker.presentation.navigation
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -28,6 +41,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.dionisispx.expensetracker.presentation.add_expense.AddExpenseScreen
 import com.dionisispx.expensetracker.presentation.home.HomeScreen
+import com.dionisispx.expensetracker.presentation.budget.BudgetSettingsScreen
+import com.dionisispx.expensetracker.presentation.settings.SettingsScreen
 
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
@@ -38,8 +53,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Boolean to check if we should show the bottom bar (hide it on AddExpense screen)
-    val showBottomBar = currentRoute != Screen.AddExpense.route
+    // Boolean to check if we should show the bottom bar (hide it on AddExpense and Budget settings)
+    val showBottomBar = currentRoute != Screen.AddExpense.route && currentRoute != "budget_settings"
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -136,16 +151,20 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 )
             }
             composable(Screen.Settings.route) {
-                SettingsScreen()
+                SettingsScreen(
+                    onNavigateToBudget = {
+                        navController.navigate("budget_settings")
+                    }
+                )
+            }
+            // Add budget settings route
+            composable("budget_settings") {
+                BudgetSettingsScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
             }
         }
-    }
-}
-
-// Dummy screens just to test the navigation
-@Composable
-fun SettingsScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Settings Screen - Preferences Go Here")
     }
 }

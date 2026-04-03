@@ -2,6 +2,7 @@ package com.dionisispx.expensetracker.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dionisispx.expensetracker.data.local.UserPreferencesRepository
 import com.dionisispx.expensetracker.domain.model.Expense
 import com.dionisispx.expensetracker.domain.repository.ExpenseRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +20,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ExpenseViewModel @Inject constructor(
-    private val repository: ExpenseRepository
+    private val repository: ExpenseRepository,
+    private val prefsRepository: UserPreferencesRepository // Inject datastore repository
 ) : ViewModel() {
 
     private val _expenses = MutableStateFlow<List<Expense>>(emptyList())
@@ -37,11 +39,20 @@ class ExpenseViewModel @Inject constructor(
     private val _yearlyExpenses = MutableStateFlow<List<Expense>>(emptyList())
     val yearlyExpenses: StateFlow<List<Expense>> = _yearlyExpenses.asStateFlow()
 
+    // Read real budget limits from data store
+    val totalBudget: StateFlow<Float> = prefsRepository.totalBudget.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), 1000f
+    )
+
+    val categoryLimits: StateFlow<Map<String, Float>> = prefsRepository.categoryLimits.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap()
+    )
+
     // Auto learning dictionary builds a map from all DB expenses
     val userDictionary: StateFlow<Map<String, String>> = repository.getAllExpenses()
         .map { allExpenses ->
             val dict = mutableMapOf<String, String>()
-            // Sort by date (oldest first) to ensure newest category overwrites the old one
+            // Sort by date oldest first to ensure newest category overwrites the old one
             allExpenses.sortedBy { it.date }.forEach { expense ->
                 // Uppercase to match the OCR output format perfectly
                 dict[expense.storeName.uppercase()] = expense.category
@@ -128,5 +139,13 @@ class ExpenseViewModel @Inject constructor(
 
     fun deleteExpense(expense: Expense) {
         viewModelScope.launch { repository.deleteExpense(expense) }
+    }
+
+    // Save new limits to data store
+    fun saveBudgetAndLimits(budget: Float, limits: Map<String, Float>) {
+        viewModelScope.launch {
+            prefsRepository.saveTotalBudget(budget)
+            prefsRepository.saveCategoryLimits(limits)
+        }
     }
 }
