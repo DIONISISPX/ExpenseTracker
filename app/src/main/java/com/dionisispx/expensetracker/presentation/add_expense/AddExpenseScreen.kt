@@ -12,6 +12,7 @@ import android.util.Base64
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -60,12 +61,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.exifinterface.media.ExifInterface
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.data.remote.AnnotateImageRequest
 import com.dionisispx.expensetracker.data.remote.Feature
 import com.dionisispx.expensetracker.data.remote.VisionImage
@@ -80,7 +83,6 @@ import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.File
 import kotlin.math.roundToInt
-import androidx.activity.result.PickVisualMediaRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,7 +102,10 @@ fun AddExpenseScreen(
     // Fetch currency preference
     val currencyPreference by viewModel.currencyPreference.collectAsState()
 
-    val tabs = listOf("Κάμερα", "Χειροκίνητη προσθήκη")
+    val tabs = listOf(
+        stringResource(R.string.tab_camera),
+        stringResource(R.string.tab_manual)
+    )
 
     // Handle navigation back logic based on current state
     val handleBackPress = {
@@ -119,7 +124,7 @@ fun AddExpenseScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("LOGO", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.add_expense), fontWeight = FontWeight.Bold) },
                 actions = {
                     IconButton(onClick = handleBackPress) {
                         Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
@@ -227,7 +232,7 @@ fun CameraUI(
             CameraPreview(imageCapture = imageCapture)
         } else {
             Box(modifier = Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
-                Text("Camera permission is required", color = Color.White)
+                Text(stringResource(R.string.camera_permission_required), color = Color.White)
             }
         }
 
@@ -239,7 +244,7 @@ fun CameraUI(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Ανάλυση απόδειξης με AI...", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.analyzing_receipt), color = Color.White, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -276,7 +281,6 @@ fun CameraUI(
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 IconButton(
                     onClick = {
-                        // Launch the photo picker filtering for images only
                         galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                     },
                     enabled = !isProcessing
@@ -299,51 +303,85 @@ fun ManualExpenseForm(
     viewModel: ExpenseViewModel
 ) {
     var isDropdownExpanded by remember { mutableStateOf(false) }
-    val categories = listOf("Groceries", "Food & Drink", "Transport & Fuel", "Shopping", "Entertainment", "Bills & Utilities", "Health & Fitness", "Travel", "Home", "Education", "Personal Care", "Other")
+    val categories = listOf(
+        Pair("Groceries", stringResource(R.string.cat_groceries)),
+        Pair("Food & Drink", stringResource(R.string.cat_food_drink)),
+        Pair("Transport & Fuel", stringResource(R.string.cat_transport)),
+        Pair("Shopping", stringResource(R.string.cat_shopping)),
+        Pair("Entertainment", stringResource(R.string.cat_entertainment)),
+        Pair("Bills & Utilities", stringResource(R.string.cat_bills)),
+        Pair("Health & Fitness", stringResource(R.string.cat_health)),
+        Pair("Travel", stringResource(R.string.cat_travel)),
+        Pair("Home", stringResource(R.string.cat_home)),
+        Pair("Education", stringResource(R.string.cat_education)),
+        Pair("Personal Care", stringResource(R.string.cat_personal)),
+        Pair("Other", stringResource(R.string.cat_other))
+    )
 
     // Dynamically place currency symbol in the text field label
-    val amountLabel = if (currencySymbol == "$") "($) Ποσό" else "Ποσό (€)"
+    val amountLabel = if (currencySymbol == "$") {
+        stringResource(R.string.amount_label_left, currencySymbol)
+    } else {
+        stringResource(R.string.amount_label_right, currencySymbol)
+    }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         OutlinedTextField(
             value = storeName, onValueChange = onStoreNameChange,
-            label = { Text("Όνομα Καταστήματος") },
-            placeholder = { Text("π.χ ΣΚΛΑΒΕΝΙΤΗΣ", color = Color.Gray) },
+            label = { Text(stringResource(R.string.store_name)) },
+            placeholder = { Text(stringResource(R.string.store_name_placeholder), color = Color.Gray) },
             modifier = Modifier.fillMaxWidth(), singleLine = true
         )
 
         OutlinedTextField(
             value = amount, onValueChange = onAmountChange,
             label = { Text(amountLabel) },
-            placeholder = { Text("π.χ 9.99", color = Color.Gray) },
+            placeholder = { Text(stringResource(R.string.amount_placeholder), color = Color.Gray) },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true
         )
 
         ExposedDropdownMenuBox(expanded = isDropdownExpanded, onExpandedChange = { isDropdownExpanded = !isDropdownExpanded }) {
             OutlinedTextField(
-                value = category, onValueChange = {}, readOnly = true, label = { Text("Κατηγορία") },
+                value = categories.find { it.first == category }?.second ?: stringResource(R.string.cat_other),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text(stringResource(R.string.category)) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) },
-                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(), modifier = Modifier.menuAnchor().fillMaxWidth()
+                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                modifier = Modifier.menuAnchor().fillMaxWidth()
             )
             ExposedDropdownMenu(expanded = isDropdownExpanded, onDismissRequest = { isDropdownExpanded = false }) {
-                categories.forEach { selectionOption ->
-                    DropdownMenuItem(text = { Text(selectionOption) }, onClick = { onCategoryChange(selectionOption); isDropdownExpanded = false })
+                categories.forEach { (internalName, displayName) ->
+                    DropdownMenuItem(
+                        text = { Text(displayName) },
+                        onClick = {
+                            onCategoryChange(internalName)
+                            isDropdownExpanded = false
+                        }
+                    )
                 }
             }
         }
 
+        Spacer(modifier = Modifier.weight(1f))
+
         Button(
-            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp),
             onClick = {
                 if (storeName.isNotBlank() && amount.isNotBlank()) {
-                    val newExpense = Expense(storeName = storeName, amount = amount.replace(",", ".").toDoubleOrNull() ?: 0.0, category = category, date = System.currentTimeMillis())
+                    val newExpense = Expense(
+                        storeName = storeName,
+                        amount = amount.replace(",", ".").toDoubleOrNull() ?: 0.0,
+                        category = category,
+                        date = System.currentTimeMillis()
+                    )
                     viewModel.addExpense(newExpense)
                     onNavigateBack()
                 }
             }
         ) {
-            Text("Save Expense")
+            Text(stringResource(R.string.save_expense), fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -580,7 +618,7 @@ private fun extractDataFromText(
     // Combine dictionaries
     val combinedDictionary = seedDictionary + userDictionary
 
-    // Store extraction using multi-word phrase matching
+    // Store extraction using multi word phrase matching
     var bestMatchScore = 0.0
 
     val phrases = mutableListOf<String>()
@@ -599,11 +637,11 @@ private fun extractDataFromText(
             val normalizedPhrase = normalizeForFuzzy(phrase)
             val normalizedStore = normalizeForFuzzy(store)
 
-            // Check if exact match, otherwise calculate fuzzy score
+            // Check if exact match otherwise calculate fuzzy score
             val isExactMatch = normalizedPhrase.replace(" ", "") == normalizedStore.replace(" ", "")
             val score = if (isExactMatch) 1.0 else similarity(normalizedPhrase, normalizedStore)
 
-            // Only update if the new score is higher than the best score we have
+            // Only update if new score is higher than best score
             if (score > 0.70 && score > bestMatchScore) {
                 bestMatchScore = score
                 finalStore = store
@@ -615,7 +653,7 @@ private fun extractDataFromText(
     // Smart amount extraction
     val lines = upperText.lines().map { it.trim() }.filter { it.isNotEmpty() }
 
-    // Negative lookbehinds and lookaheads ensure we do not match digits glued to other characters
+    // Negative lookbehinds and lookaheads ensure we do not match glued digits
     val priceRegex = Regex("(?<!\\d)\\d+[.,]\\d{2}(?!\\d)")
 
     val totalKeywords = listOf(

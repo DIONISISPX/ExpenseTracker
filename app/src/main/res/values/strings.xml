@@ -1,3 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ExpenseTracker</string>
+    <string name="app_name">Expense Tracker</string>
+    <string name="general">Γενικά</string>
+    <string name="settings">Ρυθμίσεις</string>
+    <string name="data">Δεδομένα</string>
+    <string name="delete">Διαγραφή</string>
+    <string name="cancel">Ακύρωση</string>
+    <string name="reset">Επαναφορά</string>
+    <string name="optional">(προαιρετικά)</string>
+
+    <string name="tab_home">Αρχική</string>
+    <string name="tab_settings">Ρυθμίσεις</string>
+    <string name="add_expense">Προσθήκη Εξόδου</string>
+
+    <string name="tab_now">Τώρα</string>
+    <string name="tab_history">Ιστορικό</string>
+    <string name="tab_transactions">Συναλλαγές</string>
+    <string name="tab_limits">Όρια</string>
+    <string name="yearly_total">Σύνολο Έτους:</string>
+    <string name="monthly_breakdown">Ανάλυση ανά μήνα:</string>
+    <string name="spent">Ξοδεύτηκαν</string>
+    <string name="remaining">Υπόλοιπο</string>
+    <string name="over_budget">Εκτός Προϋπολογισμού</string>
+    <string name="total_spent">Συνολικά Έξοδα</string>
+    <string name="delete_expense_title">Διαγραφή Εξόδου</string>
+    <string name="delete_expense_message">Είστε σίγουροι ότι θέλετε να διαγράψετε το έξοδο στο %1$s;</string>
+
+    <string name="set_budget_limits">Ορισμός ορίων προϋπολογισμού</string>
+    <string name="app_theme">Θέμα εφαρμογής</string>
+    <string name="theme_system">Σύστημα</string>
+    <string name="theme_light">Φωτεινό</string>
+    <string name="theme_dark">Σκοτεινό</string>
+    <string name="language">Γλώσσα</string>
+    <string name="language_el">Ελληνικά</string>
+    <string name="language_en">English</string>
+    <string name="currency">Νόμισμα</string>
+    <string name="currency_euro">(€) ευρώ</string>
+    <string name="currency_dollar">($) δολλάριο</string>
+    <string name="export_csv">Εξαγωγή σε CSV</string>
+    <string name="clear_data">Εκκαθάριση όλων των δεδομένων</string>
+    <string name="wipe_data_title">Διαγραφή όλων των δεδομένων</string>
+    <string name="wipe_data_message">Είστε σίγουροι ότι θέλετε να διαγράψετε όλα τα έξοδα και να επαναφέρετε τα όρια προϋπολογισμού; Αυτή η ενέργεια δεν αναιρείται.</string>
+    <string name="delete_everything">Διαγραφή Όλων</string>
+
+    <string name="total_monthly_budget">Συνολικός μηνιαίος προϋπολογισμός</string>
+    <string name="limits_per_category">Όρια ανά κατηγορία</string>
+
+    <string name="cat_groceries">Ψώνια</string>
+    <string name="cat_food_drink">Φαγητό &amp; Ποτό</string>
+    <string name="cat_transport">Μεταφορές &amp; Καύσιμα</string>
+    <string name="cat_shopping">Αγορές</string>
+    <string name="cat_entertainment">Διασκέδαση</string>
+    <string name="cat_bills">Λογαριασμοί</string>
+    <string name="cat_health">Υγεία</string>
+    <string name="cat_travel">Ταξίδια</string>
+    <string name="cat_home">Σπίτι</string>
+    <string name="cat_education">Εκπαίδευση</string>
+    <string name="cat_personal">Προσωπική Φροντίδα</string>
+    <string name="cat_other">Άλλο</string>
+
+    <string name="tab_camera">Κάμερα</string>
+    <string name="tab_manual">Χειροκίνητη Προσθήκη</string>
+    <string name="camera_permission_required">Απαιτείται άδεια κάμερας</string>
+    <string name="analyzing_receipt">Ανάλυση απόδειξης με AI…</string>
+    <string name="store_name">Όνομα Καταστήματος</string>
+    <string name="store_name_placeholder">π.χ. ΣΚΛΑΒΕΝΙΤΗΣ</string>
+    <string name="amount_label_left">(%1$s) Ποσό</string>
+    <string name="amount_label_right">Ποσό (%1$s)</string>
+    <string name="amount_placeholder">π.χ. 9.99</string>
+    <string name="category">Κατηγορία</string>
+    <string name="save_expense">Αποθήκευση Εξόδου</string>
+
+    <string-array name="months_full">
+        <item>Ιανουάριος</item><item>Φεβρουάριος</item><item>Μάρτιος</item><item>Απρίλιος</item>
+        <item>Μάιος</item><item>Ιούνιος</item><item>Ιούλιος</item><item>Αύγουστος</item>
+        <item>Σεπτέμβριος</item><item>Οκτώβριος</item><item>Νοέμβριος</item><item>Δεκέμβριος</item>
+    </string-array>
+    <string-array name="months_short">
+        <item>Ιαν</item><item>Φεβ</item><item>Μαρ</item><item>Απρ</item><item>Μάι</item><item>Ιούν</item>
+        <item>Ιούλ</item><item>Αύγ</item><item>Σεπ</item><item>Οκτ</item><item>Νοέ</item><item>Δεκ</item>
+    </string-array>
 </resources>

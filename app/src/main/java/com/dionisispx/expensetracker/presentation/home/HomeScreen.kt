@@ -52,10 +52,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.domain.model.Expense
 import com.dionisispx.expensetracker.presentation.ExpenseViewModel
 import java.time.Instant
@@ -68,30 +72,39 @@ import java.util.Locale
 fun HomeScreen(
     viewModel: ExpenseViewModel = hiltViewModel()
 ) {
-    // Observe the list of expenses from the viewmodel
+    // Observe list of expenses from view model
     val expenses by viewModel.expenses.collectAsState()
     val yearlyExpenses by viewModel.yearlyExpenses.collectAsState()
 
-    // Observe the current month and year from viewmodel
+    // Observe current month and year from view model
     val currentMonth by viewModel.currentMonth.collectAsState()
     val currentYear by viewModel.currentYear.collectAsState()
 
-    // Format the month in greek
-    val formatter = remember {
-        DateTimeFormatter.ofPattern("LLLL yyyy", Locale.forLanguageTag("el-GR"))
+    // Observe language preference to update date formatter
+    val languagePreference by viewModel.languagePreference.collectAsState()
+
+    // Format month based on current language
+    val formatter = remember(languagePreference) {
+        DateTimeFormatter.ofPattern("LLLL yyyy", Locale(languagePreference))
     }
     val monthString = currentMonth.format(formatter).replaceFirstChar { it.uppercase() }
 
-    // State for the top icon toggle
+    // State for top icon toggle
     var showRemaining by remember { mutableStateOf(false) }
 
-    // State for the main tabs
+    // State for main tabs
     var selectedMainTab by remember { mutableIntStateOf(0) }
-    val mainTabs = listOf("Τώρα", "Ιστορικό")
+    val mainTabs = listOf(
+        stringResource(R.string.tab_now),
+        stringResource(R.string.tab_history)
+    )
 
-    // State for the sub tabs
+    // State for sub tabs
     var selectedSubTab by remember { mutableIntStateOf(0) }
-    val subTabs = listOf("Συναλλαγές", "Όρια")
+    val subTabs = listOf(
+        stringResource(R.string.tab_transactions),
+        stringResource(R.string.tab_limits)
+    )
 
     // Observe live budget and limits from data store
     val totalBudget by viewModel.totalBudget.collectAsState()
@@ -104,7 +117,7 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "LOGO", fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(R.string.app_name), fontWeight = FontWeight.Bold)
                 },
                 actions = {
                     // Swap icon button to toggle view
@@ -158,7 +171,7 @@ fun HomeScreen(
                     }
                 }
 
-                // Dynamic donut chart updates based on the toggle state
+                // Dynamic donut chart updates based on toggle state
                 DonutChart(
                     expenses = expenses,
                     showRemaining = showRemaining,
@@ -277,7 +290,7 @@ fun HomeScreen(
                                 .fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Σύνολο Έτους:", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.yearly_total), fontWeight = FontWeight.Bold)
                             Text(
                                 text = if (currencyPreference == "$") "$$formattedYearlyTotal" else "$formattedYearlyTotal $currencyPreference",
                                 fontWeight = FontWeight.Bold,
@@ -287,7 +300,7 @@ fun HomeScreen(
                     }
 
                     Text(
-                        text = "Ανάλυση ανά μήνα:",
+                        text = stringResource(R.string.monthly_breakdown),
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
@@ -301,7 +314,7 @@ fun HomeScreen(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            val fullMonths = listOf("Ιανουάριος", "Φεβρουάριος", "Μάρτιος", "Απρίλιος", "Μάιος", "Ιούνιος", "Ιούλιος", "Αύγουστος", "Σεπτέμβριος", "Οκτώβριος", "Νοέμβριος", "Δεκέμβριος")
+                            val fullMonths = stringArrayResource(R.array.months_full)
 
                             monthlyTotals.forEachIndexed { index, total ->
                                 val formattedTotal = String.format(Locale.US, "%.2f", total)
@@ -361,8 +374,25 @@ fun CategoryProgressRow(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Localized category name
+                val localizedCategory = when (categoryName) {
+                    "Groceries" -> stringResource(R.string.cat_groceries)
+                    "Food & Drink" -> stringResource(R.string.cat_food_drink)
+                    "Transport & Fuel" -> stringResource(R.string.cat_transport)
+                    "Shopping" -> stringResource(R.string.cat_shopping)
+                    "Entertainment" -> stringResource(R.string.cat_entertainment)
+                    "Bills & Utilities" -> stringResource(R.string.cat_bills)
+                    "Health & Fitness" -> stringResource(R.string.cat_health)
+                    "Travel" -> stringResource(R.string.cat_travel)
+                    "Home" -> stringResource(R.string.cat_home)
+                    "Education" -> stringResource(R.string.cat_education)
+                    "Personal Care" -> stringResource(R.string.cat_personal)
+                    "Other" -> stringResource(R.string.cat_other)
+                    else -> categoryName
+                }
+
                 Text(
-                    text = categoryName,
+                    text = localizedCategory,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleSmall
                 )
@@ -433,7 +463,7 @@ fun MasterProgressCard(expenses: List<Expense>, totalBudget: Float, currencySymb
             ) {
                 Column {
                     Text(
-                        text = "Total Spent",
+                        text = stringResource(R.string.total_spent),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
@@ -446,7 +476,7 @@ fun MasterProgressCard(expenses: List<Expense>, totalBudget: Float, currencySymb
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Remaining",
+                        text = stringResource(R.string.remaining),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
@@ -551,7 +581,7 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
                 val formattedValue = String.format(Locale.US, "%.2f", centerValue)
 
                 Text(
-                    text = if (isOver) "Over Budget" else "Remaining",
+                    text = if (isOver) stringResource(R.string.over_budget) else stringResource(R.string.remaining),
                     style = MaterialTheme.typography.bodyLarge,
                     color = if (isOver) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -564,7 +594,7 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
             } else {
                 val formattedSpent = String.format(Locale.US, "%.2f", totalSpent)
                 Text(
-                    text = "Spent",
+                    text = stringResource(R.string.spent),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -584,7 +614,7 @@ fun YearlyBarChart(monthlyTotals: FloatArray) {
     val maxAmount = monthlyTotals.maxOrNull() ?: 1f
     val safeMax = if (maxAmount == 0f) 1f else maxAmount
 
-    val monthNames = listOf("Ιαν", "Φεβ", "Μαρ", "Απρ", "Μαι", "Ιουν", "Ιουλ", "Αυγ", "Σεπ", "Οκτ", "Νοε", "Δεκ")
+    val monthNames = stringArrayResource(R.array.months_short)
 
     Row(
         modifier = Modifier
@@ -667,8 +697,26 @@ fun ExpenseItem(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
+
+                // Localized category name
+                val localizedCategory = when (expense.category) {
+                    "Groceries" -> stringResource(R.string.cat_groceries)
+                    "Food & Drink" -> stringResource(R.string.cat_food_drink)
+                    "Transport & Fuel" -> stringResource(R.string.cat_transport)
+                    "Shopping" -> stringResource(R.string.cat_shopping)
+                    "Entertainment" -> stringResource(R.string.cat_entertainment)
+                    "Bills & Utilities" -> stringResource(R.string.cat_bills)
+                    "Health & Fitness" -> stringResource(R.string.cat_health)
+                    "Travel" -> stringResource(R.string.cat_travel)
+                    "Home" -> stringResource(R.string.cat_home)
+                    "Education" -> stringResource(R.string.cat_education)
+                    "Personal Care" -> stringResource(R.string.cat_personal)
+                    "Other" -> stringResource(R.string.cat_other)
+                    else -> expense.category
+                }
+
                 Text(
-                    text = expense.category,
+                    text = localizedCategory,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -685,8 +733,8 @@ fun ExpenseItem(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Διαγραφή εξόδου") },
-            text = { Text("Είστε σίγουροι ότι θέλετε να διαγράψετε το έξοδο ${expense.storeName};") },
+            title = { Text(stringResource(R.string.delete_expense_title)) },
+            text = { Text(stringResource(R.string.delete_expense_message, expense.storeName)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -694,12 +742,12 @@ fun ExpenseItem(
                         showDeleteDialog = false
                     }
                 ) {
-                    Text("Διαγραφή", color = Color.Red)
+                    Text(stringResource(R.string.delete), color = Color.Red)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Ακύρωση")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )

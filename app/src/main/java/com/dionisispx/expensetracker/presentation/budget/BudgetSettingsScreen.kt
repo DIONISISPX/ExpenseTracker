@@ -1,16 +1,13 @@
 package com.dionisispx.expensetracker.presentation.budget
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,6 +32,7 @@ import androidx.compose.material.icons.filled.LocalMall
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -42,7 +40,6 @@ import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -65,6 +62,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -74,6 +72,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.presentation.ExpenseViewModel
 import java.util.Locale
 
@@ -93,7 +92,7 @@ fun BudgetSettingsScreen(
     var categoryLimits by remember { mutableStateOf<Map<String, Float>>(emptyMap()) }
     var isInitialized by remember { mutableStateOf(false) }
 
-    // Load data once when it arrives from viewmodel
+    // Load data once when it arrives from view model
     LaunchedEffect(savedTotalBudget, savedCategoryLimits) {
         if (!isInitialized && savedTotalBudget > 0f) {
             overallBudgetInput = savedTotalBudget.toInt().toString()
@@ -111,26 +110,26 @@ fun BudgetSettingsScreen(
     val isDark = isSystemInDarkTheme()
     val cardColor = if (isDark) MaterialTheme.colorScheme.surfaceVariant else Color.White
 
-    // Define categories with their specific icons and colors
+    // Define categories with specific icons and colors
     val categories = listOf(
-        CategoryData("Groceries", Icons.Default.ShoppingCart, Color(0xFFC8E6C9)),
-        CategoryData("Food & Drink", Icons.Default.Restaurant, Color(0xFFFFCCBC)),
-        CategoryData("Transport & Fuel", Icons.Default.DirectionsCar, Color(0xFFBBDEFB)),
-        CategoryData("Shopping", Icons.Default.LocalMall, Color(0xFFE1BEE7)),
-        CategoryData("Entertainment", Icons.Default.Movie, Color(0xFFFFF9C4)),
-        CategoryData("Bills & Utilities", Icons.Default.Receipt, Color(0xFFB2DFDB)),
-        CategoryData("Health & Fitness", Icons.Default.Favorite, Color(0xFFFFCDD2)),
-        CategoryData("Travel", Icons.Default.Flight, Color(0xFFB2EBF2)),
-        CategoryData("Home", Icons.Default.Home, Color(0xFFD7CCC8)),
-        CategoryData("Education", Icons.Default.School, Color(0xFFF5F5F5)),
-        CategoryData("Personal Care", Icons.Default.Spa, Color(0xFFF8BBD0)),
-        CategoryData("Other", Icons.Default.MoreHoriz, Color(0xFFCFD8DC))
+        CategoryData("Groceries", stringResource(R.string.cat_groceries), Icons.Default.ShoppingCart, Color(0xFFC8E6C9)),
+        CategoryData("Food & Drink", stringResource(R.string.cat_food_drink), Icons.Default.Restaurant, Color(0xFFFFCCBC)),
+        CategoryData("Transport & Fuel", stringResource(R.string.cat_transport), Icons.Default.DirectionsCar, Color(0xFFBBDEFB)),
+        CategoryData("Shopping", stringResource(R.string.cat_shopping), Icons.Default.LocalMall, Color(0xFFE1BEE7)),
+        CategoryData("Entertainment", stringResource(R.string.cat_entertainment), Icons.Default.Movie, Color(0xFFFFF9C4)),
+        CategoryData("Bills & Utilities", stringResource(R.string.cat_bills), Icons.Default.Receipt, Color(0xFFB2DFDB)),
+        CategoryData("Health & Fitness", stringResource(R.string.cat_health), Icons.Default.Favorite, Color(0xFFFFCDD2)),
+        CategoryData("Travel", stringResource(R.string.cat_travel), Icons.Default.Flight, Color(0xFFB2EBF2)),
+        CategoryData("Home", stringResource(R.string.cat_home), Icons.Default.Home, Color(0xFFD7CCC8)),
+        CategoryData("Education", stringResource(R.string.cat_education), Icons.Default.School, Color(0xFFF5F5F5)),
+        CategoryData("Personal Care", stringResource(R.string.cat_personal), Icons.Default.Spa, Color(0xFFF8BBD0)),
+        CategoryData("Other", stringResource(R.string.cat_other), Icons.Default.MoreHoriz, Color(0xFFCFD8DC))
     )
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Set budget limits", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.set_budget_limits), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
@@ -171,7 +170,7 @@ fun BudgetSettingsScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Total monthly budget",
+                        text = stringResource(R.string.total_monthly_budget),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -208,12 +207,12 @@ fun BudgetSettingsScreen(
             ) {
                 Column {
                     Text(
-                        text = "Limits per category",
+                        text = stringResource(R.string.limits_per_category),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "(optional)",
+                        text = stringResource(R.string.optional),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -256,12 +255,12 @@ fun BudgetSettingsScreen(
 
                         val remainingText = if (isPercentMode) {
                             val pct = if (overallBudget > 0f) (remainingEur / overallBudget) * 100f else 0f
-                            "Remaining: ${String.format(Locale.US, "%.0f", pct)}%"
+                            stringResource(R.string.remaining) + ": ${String.format(Locale.US, "%.0f", pct)}%"
                         } else {
                             if (currencySymbol == "$") {
-                                "Remaining: $${String.format(Locale.US, "%.0f", remainingEur)}"
+                                stringResource(R.string.remaining) + ": $$${String.format(Locale.US, "%.0f", remainingEur)}"
                             } else {
-                                "Remaining: ${String.format(Locale.US, "%.0f", remainingEur)} $currencySymbol"
+                                stringResource(R.string.remaining) + ": ${String.format(Locale.US, "%.0f", remainingEur)} $currencySymbol"
                             }
                         }
 
@@ -276,17 +275,17 @@ fun BudgetSettingsScreen(
                             onClick = { categoryLimits = emptyMap() },
                             contentPadding = PaddingValues(0.dp)
                         ) {
-                            Text("Reset", color = MaterialTheme.colorScheme.error)
+                            Text(stringResource(R.string.reset), color = MaterialTheme.colorScheme.error)
                         }
                     }
 
-                    Divider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f), modifier = Modifier.padding(horizontal = 16.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f), modifier = Modifier.padding(horizontal = 16.dp))
 
                     categories.forEachIndexed { index, categoryData ->
 
-                        // Calculate maximum allowed limit for this specific category
-                        val currentLimit = categoryLimits[categoryData.name] ?: 0f
-                        val otherCategoriesSum = categoryLimits.filterKeys { it != categoryData.name }.values.sum()
+                        // Calculate maximum allowed limit for this category
+                        val currentLimit = categoryLimits[categoryData.internalName] ?: 0f
+                        val otherCategoriesSum = categoryLimits.filterKeys { it != categoryData.internalName }.values.sum()
                         val maxAllowedEurForCategory = (overallBudget - otherCategoriesSum).coerceAtLeast(0f)
 
                         CategoryLimitRow(
@@ -295,17 +294,16 @@ fun BudgetSettingsScreen(
                             maxAllowedEur = maxAllowedEurForCategory,
                             overallBudget = overallBudget,
                             isPercentMode = isPercentMode,
-                            isDark = isDark,
                             currencySymbol = currencySymbol,
                             onLimitChange = { newEurValue ->
                                 val clampedEurValue = newEurValue.coerceAtMost(maxAllowedEurForCategory)
-                                categoryLimits = categoryLimits.toMutableMap().apply { put(categoryData.name, clampedEurValue) }
+                                categoryLimits = categoryLimits.toMutableMap().apply { put(categoryData.internalName, clampedEurValue) }
                             }
                         )
 
                         // Add divider between items except for the last one
                         if (index < categories.size - 1) {
-                            Divider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f), modifier = Modifier.padding(start = 72.dp, end = 16.dp))
+                            HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f), modifier = Modifier.padding(start = 72.dp, end = 16.dp))
                         }
                     }
                 }
@@ -315,7 +313,7 @@ fun BudgetSettingsScreen(
 }
 
 // Data class to hold category visual info
-data class CategoryData(val name: String, val icon: ImageVector, val color: Color)
+data class CategoryData(val internalName: String, val displayName: String, val icon: ImageVector, val color: Color)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -325,11 +323,10 @@ fun CategoryLimitRow(
     maxAllowedEur: Float,
     overallBudget: Float,
     isPercentMode: Boolean,
-    isDark: Boolean,
     currencySymbol: String,
     onLimitChange: (Float) -> Unit
 ) {
-    // Calculate display value based on the current mode
+    // Calculate display value based on current mode
     val displayValue = if (isPercentMode && overallBudget > 0f) {
         ((currentLimitEur / overallBudget) * 100f).toInt().toFloat()
     } else {
@@ -364,7 +361,7 @@ fun CategoryLimitRow(
         ) {
             Icon(
                 imageVector = categoryData.icon,
-                contentDescription = categoryData.name,
+                contentDescription = categoryData.displayName,
                 tint = Color.Black.copy(alpha = 0.7f)
             )
         }
@@ -376,7 +373,7 @@ fun CategoryLimitRow(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = categoryData.name,
+                text = categoryData.displayName,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.titleSmall,
                 maxLines = 1,
