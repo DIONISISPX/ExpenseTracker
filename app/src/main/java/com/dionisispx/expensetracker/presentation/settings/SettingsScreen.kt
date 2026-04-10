@@ -450,12 +450,18 @@ fun SettingsScreen(
                 }
             }
 
+            // Evaluate string resources outside the dialog to prevent context reset
+            val wipeTitle = stringResource(R.string.wipe_data_title)
+            val wipeMessage = stringResource(R.string.wipe_data_message)
+            val btnDeleteEverything = stringResource(R.string.delete_everything)
+            val btnCancel = stringResource(R.string.cancel)
+
             // Confirmation dialog for data wipe
             if (showDeleteDialog) {
                 AlertDialog(
                     onDismissRequest = { showDeleteDialog = false },
-                    title = { Text(stringResource(R.string.wipe_data_title)) },
-                    text = { Text(stringResource(R.string.wipe_data_message)) },
+                    title = { Text(wipeTitle) },
+                    text = { Text(wipeMessage) },
                     confirmButton = {
                         TextButton(
                             onClick = {
@@ -464,12 +470,12 @@ fun SettingsScreen(
                                 Toast.makeText(context, "All data wiped", Toast.LENGTH_SHORT).show()
                             }
                         ) {
-                            Text(stringResource(R.string.delete_everything), color = Color.Red, fontWeight = FontWeight.Bold)
+                            Text(btnDeleteEverything, color = Color.Red, fontWeight = FontWeight.Bold)
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showDeleteDialog = false }) {
-                            Text(stringResource(R.string.cancel))
+                            Text(btnCancel)
                         }
                     }
                 )

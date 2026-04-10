@@ -24,10 +24,10 @@
     <string name="over_budget">Εκτός Προϋπολογισμού</string>
     <string name="total_spent">Συνολικά Έξοδα</string>
     <string name="delete_expense_title">Διαγραφή Εξόδου</string>
-    <string name="delete_expense_message">Είστε σίγουροι ότι θέλετε να διαγράψετε το έξοδο στο %1$s;</string>
+    <string name="delete_expense_message">Είστε σίγουροι ότι θέλετε να διαγράψετε το έξοδο από το κατάστημα %1$s;</string>
 
-    <string name="set_budget_limits">Ορισμός ορίων προϋπολογισμού</string>
-    <string name="app_theme">Θέμα εφαρμογής</string>
+    <string name="set_budget_limits">Ορισμός Ορίων Προϋπολογισμού</string>
+    <string name="app_theme">Θέμα</string>
     <string name="theme_system">Σύστημα</string>
     <string name="theme_light">Φωτεινό</string>
     <string name="theme_dark">Σκοτεινό</string>
@@ -35,10 +35,10 @@
     <string name="language_el">Ελληνικά</string>
     <string name="language_en">English</string>
     <string name="currency">Νόμισμα</string>
-    <string name="currency_euro">(€) ευρώ</string>
-    <string name="currency_dollar">($) δολλάριο</string>
+    <string name="currency_euro">(€) Ευρώ</string>
+    <string name="currency_dollar">($) Δολάριο</string>
     <string name="export_csv">Εξαγωγή σε CSV</string>
-    <string name="clear_data">Εκκαθάριση όλων των δεδομένων</string>
+    <string name="clear_data">Διαγραφή όλων των δεδομένων</string>
     <string name="wipe_data_title">Διαγραφή όλων των δεδομένων</string>
     <string name="wipe_data_message">Είστε σίγουροι ότι θέλετε να διαγράψετε όλα τα έξοδα και να επαναφέρετε τα όρια προϋπολογισμού; Αυτή η ενέργεια δεν αναιρείται.</string>
     <string name="delete_everything">Διαγραφή Όλων</string>
@@ -46,10 +46,10 @@
     <string name="total_monthly_budget">Συνολικός μηνιαίος προϋπολογισμός</string>
     <string name="limits_per_category">Όρια ανά κατηγορία</string>
 
-    <string name="cat_groceries">Ψώνια</string>
+    <string name="cat_groceries">Σούπερ Μάρκετ</string>
     <string name="cat_food_drink">Φαγητό &amp; Ποτό</string>
     <string name="cat_transport">Μεταφορές &amp; Καύσιμα</string>
-    <string name="cat_shopping">Αγορές</string>
+    <string name="cat_shopping">Ψώνια</string>
     <string name="cat_entertainment">Διασκέδαση</string>
     <string name="cat_bills">Λογαριασμοί</string>
     <string name="cat_health">Υγεία</string>

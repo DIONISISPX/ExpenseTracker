@@ -24,10 +24,10 @@
     <string name="over_budget">Over Budget</string>
     <string name="total_spent">Total Spent</string>
     <string name="delete_expense_title">Delete Expense</string>
-    <string name="delete_expense_message">Are you sure you want to delete the expense at %1$s?</string>
+    <string name="delete_expense_message">Are you sure you want to delete the expense from %1$s?</string>
 
     <string name="set_budget_limits">Set budget limits</string>
-    <string name="app_theme">App theme</string>
+    <string name="app_theme">Theme</string>
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
@@ -38,8 +38,8 @@
     <string name="currency_euro">(€) Euro</string>
     <string name="currency_dollar">($) Dollar</string>
     <string name="export_csv">Export to CSV</string>
-    <string name="clear_data">Clear all data</string>
-    <string name="wipe_data_title">Wipe all data</string>
+    <string name="clear_data">Delete all data</string>
+    <string name="wipe_data_title">Delete all data</string>
     <string name="wipe_data_message">Are you sure you want to delete all expenses and reset your budget limits? This cannot be undone.</string>
     <string name="delete_everything">Delete Everything</string>
 

@@ -674,6 +674,12 @@ fun ExpenseItem(
     val formattedAmount = String.format(Locale.US, "%.2f", expense.amount)
     val expenseText = if (currencySymbol == "$") "- $$formattedAmount" else "- $formattedAmount $currencySymbol"
 
+    // Evaluate string resources outside the dialog to prevent context reset
+    val dialogTitle = stringResource(R.string.delete_expense_title)
+    val dialogMessage = stringResource(R.string.delete_expense_message, expense.storeName)
+    val btnDelete = stringResource(R.string.delete)
+    val btnCancel = stringResource(R.string.cancel)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -733,8 +739,8 @@ fun ExpenseItem(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text(stringResource(R.string.delete_expense_title)) },
-            text = { Text(stringResource(R.string.delete_expense_message, expense.storeName)) },
+            title = { Text(dialogTitle) },
+            text = { Text(dialogMessage) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -742,12 +748,12 @@ fun ExpenseItem(
                         showDeleteDialog = false
                     }
                 ) {
-                    Text(stringResource(R.string.delete), color = Color.Red)
+                    Text(btnDelete, color = Color.Red)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text(stringResource(R.string.cancel))
+                    Text(btnCancel)
                 }
             }
         )

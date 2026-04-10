@@ -1,6 +1,5 @@
 package com.dionisispx.expensetracker
 
-import android.content.Context
 import android.content.ContextWrapper
 import android.content.res.Configuration
 import android.os.Bundle
@@ -38,29 +37,29 @@ class MainActivity : ComponentActivity() {
             }
 
             val context = LocalContext.current
+            val currentConfig = LocalConfiguration.current
+
+            // Create localized configuration
+            val localizedConfig = remember(languagePreference, currentConfig) {
+                val locale = Locale.forLanguageTag(languagePreference)
+                Locale.setDefault(locale)
+                Configuration(currentConfig).apply {
+                    setLocale(locale)
+                    setLayoutDirection(locale)
+                }
+            }
 
             // Use context wrapper to override resources while keeping activity context to prevent hilt crashes
-            val localizedContext = remember(languagePreference, context) {
-                val locale = Locale(languagePreference)
-                Locale.setDefault(locale)
-
-                val config = Configuration(context.resources.configuration)
-                config.setLocale(locale)
-                config.setLayoutDirection(locale)
-
-                // Update configuration directly to ensure localized system dialogs
-                @Suppress("DEPRECATION")
-                context.resources.updateConfiguration(config, context.resources.displayMetrics)
-
+            val localizedContext = remember(context, localizedConfig) {
                 object : ContextWrapper(context) {
-                    private val localizedResources = context.createConfigurationContext(config).resources
+                    private val localizedResources = context.createConfigurationContext(localizedConfig).resources
                     override fun getResources() = localizedResources
                 }
             }
 
             CompositionLocalProvider(
                 LocalContext provides localizedContext,
-                LocalConfiguration provides localizedContext.resources.configuration
+                LocalConfiguration provides localizedConfig
             ) {
                 ExpenseTrackerTheme(darkTheme = isDarkTheme) {
                     MainScreen()
