@@ -4,10 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.dionisispx.expensetracker.presentation.ExpenseViewModel
 import com.dionisispx.expensetracker.presentation.navigation.MainScreen
 import com.dionisispx.expensetracker.ui.theme.ExpenseTrackerTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -18,25 +19,22 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ExpenseTrackerTheme {
+            // Get the ViewModel to access DataStore
+            val viewModel: ExpenseViewModel = hiltViewModel()
+
+            // Get theme preference
+            val themePreference by viewModel.themePreference.collectAsState()
+
+            // Enable dark mode based on the user's saved choice
+            val isDarkTheme = when (themePreference.lowercase()) {
+                "dark" -> true
+                "light" -> false
+                else -> isSystemInDarkTheme()
+            }
+
+            ExpenseTrackerTheme(darkTheme = isDarkTheme) {
                 MainScreen()
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ExpenseTrackerTheme {
-        Greeting("Android")
     }
 }

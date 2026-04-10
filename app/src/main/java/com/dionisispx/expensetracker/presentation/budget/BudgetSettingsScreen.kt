@@ -2,6 +2,7 @@ package com.dionisispx.expensetracker.presentation.budget
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -85,6 +86,7 @@ fun BudgetSettingsScreen(
     // Observe database values
     val savedTotalBudget by viewModel.totalBudget.collectAsState()
     val savedCategoryLimits by viewModel.categoryLimits.collectAsState()
+    val currencySymbol by viewModel.currencyPreference.collectAsState()
 
     // Local state variables for input handling
     var overallBudgetInput by remember { mutableStateOf("") }
@@ -104,6 +106,10 @@ fun BudgetSettingsScreen(
 
     // Toggle between euro and percent modes
     var isPercentMode by remember { mutableStateOf(false) }
+
+    // Explicitly check for dark mode to force pure white in light mode
+    val isDark = isSystemInDarkTheme()
+    val cardColor = if (isDark) MaterialTheme.colorScheme.surfaceVariant else Color.White
 
     // Define categories with their specific icons and colors
     val categories = listOf(
@@ -149,13 +155,13 @@ fun BudgetSettingsScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // Overall monthly budget section card using surfaceVariant for dark mode contrast
+            // Overall monthly budget section card
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                colors = CardDefaults.cardColors(containerColor = cardColor),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
@@ -171,7 +177,7 @@ fun BudgetSettingsScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Integer input with logic to clear categories if total budget becomes smaller than allocated limits
+                    // Integer input dynamically placing the symbol based on currency
                     MinimalistIntegerInput(
                         value = overallBudgetInput,
                         onValueChange = { input ->
@@ -181,9 +187,10 @@ fun BudgetSettingsScreen(
                                 categoryLimits = emptyMap()
                             }
                         },
-                        labelSymbol = "€",
+                        labelSymbol = currencySymbol,
                         maxValue = 1000000L,
                         fontSize = 40.sp,
+                        isSymbolOnLeft = (currencySymbol == "$"),
                         modifier = Modifier.width(200.dp)
                     )
                 }
@@ -224,13 +231,13 @@ fun BudgetSettingsScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Main list container card using surfaceVariant for dark mode contrast
+            // Main list container card
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .padding(bottom = 32.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                colors = CardDefaults.cardColors(containerColor = cardColor),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -251,7 +258,11 @@ fun BudgetSettingsScreen(
                             val pct = if (overallBudget > 0f) (remainingEur / overallBudget) * 100f else 0f
                             "Remaining: ${String.format(Locale.US, "%.0f", pct)}%"
                         } else {
-                            "Remaining: ${String.format(Locale.US, "%.0f", remainingEur)} €"
+                            if (currencySymbol == "$") {
+                                "Remaining: $${String.format(Locale.US, "%.0f", remainingEur)}"
+                            } else {
+                                "Remaining: ${String.format(Locale.US, "%.0f", remainingEur)} $currencySymbol"
+                            }
                         }
 
                         Text(
@@ -284,6 +295,8 @@ fun BudgetSettingsScreen(
                             maxAllowedEur = maxAllowedEurForCategory,
                             overallBudget = overallBudget,
                             isPercentMode = isPercentMode,
+                            isDark = isDark,
+                            currencySymbol = currencySymbol,
                             onLimitChange = { newEurValue ->
                                 val clampedEurValue = newEurValue.coerceAtMost(maxAllowedEurForCategory)
                                 categoryLimits = categoryLimits.toMutableMap().apply { put(categoryData.name, clampedEurValue) }
@@ -312,6 +325,8 @@ fun CategoryLimitRow(
     maxAllowedEur: Float,
     overallBudget: Float,
     isPercentMode: Boolean,
+    isDark: Boolean,
+    currencySymbol: String,
     onLimitChange: (Float) -> Unit
 ) {
     // Calculate display value based on the current mode
@@ -418,9 +433,10 @@ fun CategoryLimitRow(
                             }
                             onLimitChange(newEurValue)
                         },
-                        labelSymbol = if (isPercentMode) "%" else "€",
+                        labelSymbol = if (isPercentMode) "%" else currencySymbol,
                         maxValue = currentMax,
                         fontSize = 18.sp,
+                        isSymbolOnLeft = false,
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -429,7 +445,11 @@ fun CategoryLimitRow(
                     // Conversion helper text
                     val conversionText = if (currentLimitEur > 0f) {
                         if (isPercentMode) {
-                            "${currentLimitEur.toInt()} €"
+                            if (currencySymbol == "$") {
+                                "$${currentLimitEur.toInt()}"
+                            } else {
+                                "${currentLimitEur.toInt()} $currencySymbol"
+                            }
                         } else if (overallBudget > 0f) {
                             "${((currentLimitEur / overallBudget) * 100f).toInt()}%"
                         } else {
@@ -453,7 +473,7 @@ fun CategoryLimitRow(
     }
 }
 
-// Custom integer input component
+// Custom integer input component with dynamic layout
 @Composable
 fun MinimalistIntegerInput(
     value: String,
@@ -461,6 +481,7 @@ fun MinimalistIntegerInput(
     labelSymbol: String,
     maxValue: Long,
     fontSize: TextUnit,
+    isSymbolOnLeft: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -468,6 +489,17 @@ fun MinimalistIntegerInput(
         horizontalArrangement = Arrangement.Center,
         modifier = modifier
     ) {
+        if (isSymbolOnLeft) {
+            Text(
+                text = labelSymbol,
+                fontSize = fontSize,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(bottom = if (fontSize.value > 20f) 4.dp else 2.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+        }
+
         BasicTextField(
             value = value,
             onValueChange = { input ->
@@ -507,14 +539,15 @@ fun MinimalistIntegerInput(
             }
         )
 
-        Spacer(modifier = Modifier.width(4.dp))
-
-        Text(
-            text = labelSymbol,
-            fontSize = fontSize,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(bottom = if (fontSize.value > 20f) 4.dp else 2.dp)
-        )
+        if (!isSymbolOnLeft) {
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = labelSymbol,
+                fontSize = fontSize,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(bottom = if (fontSize.value > 20f) 4.dp else 2.dp)
+            )
+        }
     }
 }

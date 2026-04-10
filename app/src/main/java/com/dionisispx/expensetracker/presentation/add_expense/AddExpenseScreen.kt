@@ -97,6 +97,9 @@ fun AddExpenseScreen(
     // Fetch the smart dictionary from the view model
     val userDictionary by viewModel.userDictionary.collectAsState()
 
+    // Fetch currency preference
+    val currencyPreference by viewModel.currencyPreference.collectAsState()
+
     val tabs = listOf("Κάμερα", "Χειροκίνητη προσθήκη")
 
     // Handle navigation back logic based on current state
@@ -149,6 +152,7 @@ fun AddExpenseScreen(
                         onAmountChange = { amount = it },
                         category = category,
                         onCategoryChange = { category = it },
+                        currencySymbol = currencyPreference,
                         onNavigateBack = onNavigateBack,
                         viewModel = viewModel
                     )
@@ -170,6 +174,7 @@ fun AddExpenseScreen(
                         onAmountChange = { amount = it },
                         category = category,
                         onCategoryChange = { category = it },
+                        currencySymbol = currencyPreference,
                         onNavigateBack = onNavigateBack,
                         viewModel = viewModel
                     )
@@ -289,24 +294,28 @@ fun ManualExpenseForm(
     storeName: String, onStoreNameChange: (String) -> Unit,
     amount: String, onAmountChange: (String) -> Unit,
     category: String, onCategoryChange: (String) -> Unit,
+    currencySymbol: String,
     onNavigateBack: () -> Unit,
     viewModel: ExpenseViewModel
 ) {
     var isDropdownExpanded by remember { mutableStateOf(false) }
     val categories = listOf("Groceries", "Food & Drink", "Transport & Fuel", "Shopping", "Entertainment", "Bills & Utilities", "Health & Fitness", "Travel", "Home", "Education", "Personal Care", "Other")
 
+    // Dynamically place currency symbol in the text field label
+    val amountLabel = if (currencySymbol == "$") "($) Ποσό" else "Ποσό (€)"
+
     Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         OutlinedTextField(
             value = storeName, onValueChange = onStoreNameChange,
             label = { Text("Όνομα Καταστήματος") },
-            placeholder = { Text("π.χ. ΣΚΛΑΒΕΝΙΤΗΣ", color = Color.Gray) },
+            placeholder = { Text("π.χ ΣΚΛΑΒΕΝΙΤΗΣ", color = Color.Gray) },
             modifier = Modifier.fillMaxWidth(), singleLine = true
         )
 
         OutlinedTextField(
             value = amount, onValueChange = onAmountChange,
-            label = { Text("Ποσό (€)") },
-            placeholder = { Text("π.χ. 9.99", color = Color.Gray) },
+            label = { Text(amountLabel) },
+            placeholder = { Text("π.χ 9.99", color = Color.Gray) },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true
         )

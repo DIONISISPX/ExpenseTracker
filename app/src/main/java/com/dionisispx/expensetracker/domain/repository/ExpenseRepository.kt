@@ -17,4 +17,7 @@ interface ExpenseRepository {
 
     // Delete an existing expense
     suspend fun deleteExpense(expense: Expense)
+
+    // Delete all expenses
+    suspend fun deleteAllExpenses()
 }

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -21,7 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ExpenseViewModel @Inject constructor(
     private val repository: ExpenseRepository,
-    private val prefsRepository: UserPreferencesRepository // Inject datastore repository
+    private val prefsRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val _expenses = MutableStateFlow<List<Expense>>(emptyList())
@@ -44,17 +45,32 @@ class ExpenseViewModel @Inject constructor(
         viewModelScope, SharingStarted.WhileSubscribed(5000), 1000f
     )
 
+    // Read category limits from data store
     val categoryLimits: StateFlow<Map<String, Float>> = prefsRepository.categoryLimits.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap()
     )
 
-    // Auto learning dictionary builds a map from all DB expenses
+    // Read theme preference from data store
+    val themePreference: StateFlow<String> = prefsRepository.themePreference.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), "system"
+    )
+
+    // Read currency preference from data store
+    val currencyPreference: StateFlow<String> = prefsRepository.currencyPreference.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), "€"
+    )
+
+    val languagePreference: StateFlow<String> = prefsRepository.languagePreference.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), "el"
+    )
+
+    // Auto learning dictionary builds a map from all database expenses
     val userDictionary: StateFlow<Map<String, String>> = repository.getAllExpenses()
         .map { allExpenses ->
             val dict = mutableMapOf<String, String>()
             // Sort by date oldest first to ensure newest category overwrites the old one
             allExpenses.sortedBy { it.date }.forEach { expense ->
-                // Uppercase to match the OCR output format perfectly
+                // Uppercase to match the ocr output format perfectly
                 dict[expense.storeName.uppercase()] = expense.category
             }
             dict
@@ -133,10 +149,12 @@ class ExpenseViewModel @Inject constructor(
         _currentYear.value -= 1
     }
 
+    // Add new expense to database
     fun addExpense(expense: Expense) {
         viewModelScope.launch { repository.insertExpense(expense) }
     }
 
+    // Delete expense from database
     fun deleteExpense(expense: Expense) {
         viewModelScope.launch { repository.deleteExpense(expense) }
     }
@@ -146,6 +164,42 @@ class ExpenseViewModel @Inject constructor(
         viewModelScope.launch {
             prefsRepository.saveTotalBudget(budget)
             prefsRepository.saveCategoryLimits(limits)
+        }
+    }
+
+    // Save theme preference to data store
+    fun saveThemePreference(theme: String) {
+        viewModelScope.launch {
+            prefsRepository.saveThemePreference(theme)
+        }
+    }
+
+    // Save currency preference to data store
+    fun saveCurrencyPreference(currency: String) {
+        viewModelScope.launch {
+            prefsRepository.saveCurrencyPreference(currency)
+        }
+    }
+
+    // Delete all data from database and reset preferences
+    fun deleteAllData() {
+        viewModelScope.launch {
+            // Wipes the database
+            repository.deleteAllExpenses()
+            // Resets the budget and limits back to default
+            prefsRepository.saveTotalBudget(1000f)
+            prefsRepository.saveCategoryLimits(emptyMap())
+        }
+    }
+
+    // Fetch a single snapshot of all expenses for exporting
+    suspend fun getAllExpensesSnapshot(): List<Expense> {
+        return repository.getAllExpenses().firstOrNull() ?: emptyList()
+    }
+
+    fun saveLanguagePreference(language: String) {
+        viewModelScope.launch {
+            prefsRepository.saveLanguagePreference(language)
         }
     }
 }

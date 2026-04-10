@@ -21,6 +21,8 @@ class UserPreferencesRepository @Inject constructor(
     // Keys for saving data safely
     private val totalBudgetKey = floatPreferencesKey("total_budget")
     private val categoryLimitsKey = stringPreferencesKey("category_limits")
+    private val themePreferenceKey = stringPreferencesKey("theme_preference")
+    private val currencyPreferenceKey = stringPreferencesKey("currency_preference")
 
     // Flow to read total budget defaulting to 1000
     val totalBudget: Flow<Float> = context.dataStore.data.map { preferences ->
@@ -30,12 +32,32 @@ class UserPreferencesRepository @Inject constructor(
     // Flow to read category limits from JSON string
     val categoryLimits: Flow<Map<String, Float>> = context.dataStore.data.map { preferences ->
         val jsonString = preferences[categoryLimitsKey] ?: "{}"
-        val jsonObject = JSONObject(jsonString)
-        val map = mutableMapOf<String, Float>()
-        jsonObject.keys().forEach { key ->
-            map[key] = jsonObject.getDouble(key).toFloat()
+        try {
+            val jsonObject = JSONObject(jsonString)
+            val map = mutableMapOf<String, Float>()
+            jsonObject.keys().forEach { key ->
+                map[key] = jsonObject.getDouble(key).toFloat()
+            }
+            map
+        } catch (e: Exception) {
+            emptyMap()
         }
-        map
+    }
+
+    // Flow to read theme preference defaulting to system setting
+    val themePreference: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[themePreferenceKey] ?: "system"
+    }
+
+    // Flow to read currency preference defaulting to euro
+    val currencyPreference: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[currencyPreferenceKey] ?: "€"
+    }
+
+    private val languagePreferenceKey = stringPreferencesKey("language_preference")
+
+    val languagePreference: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[languagePreferenceKey] ?: "el"
     }
 
     // Write budget to disk
@@ -53,6 +75,26 @@ class UserPreferencesRepository @Inject constructor(
                 jsonObject.put(key, value.toDouble())
             }
             preferences[categoryLimitsKey] = jsonObject.toString()
+        }
+    }
+
+    // Write theme preference to disk
+    suspend fun saveThemePreference(theme: String) {
+        context.dataStore.edit { preferences ->
+            preferences[themePreferenceKey] = theme
+        }
+    }
+
+    // Write currency preference to disk
+    suspend fun saveCurrencyPreference(currency: String) {
+        context.dataStore.edit { preferences ->
+            preferences[currencyPreferenceKey] = currency
+        }
+    }
+
+    suspend fun saveLanguagePreference(language: String) {
+        context.dataStore.edit { preferences ->
+            preferences[languagePreferenceKey] = language
         }
     }
 }

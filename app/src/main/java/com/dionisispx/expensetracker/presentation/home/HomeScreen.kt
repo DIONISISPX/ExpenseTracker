@@ -97,6 +97,9 @@ fun HomeScreen(
     val totalBudget by viewModel.totalBudget.collectAsState()
     val categoryLimits by viewModel.categoryLimits.collectAsState()
 
+    // Observe user currency preference
+    val currencyPreference by viewModel.currencyPreference.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -159,7 +162,8 @@ fun HomeScreen(
                 DonutChart(
                     expenses = expenses,
                     showRemaining = showRemaining,
-                    totalBudget = totalBudget
+                    totalBudget = totalBudget,
+                    currencySymbol = currencyPreference
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -184,6 +188,7 @@ fun HomeScreen(
                         items(expenses) { expense ->
                             ExpenseItem(
                                 expense = expense,
+                                currencySymbol = currencyPreference,
                                 onDeleteClick = { viewModel.deleteExpense(it) }
                             )
                         }
@@ -198,7 +203,7 @@ fun HomeScreen(
                     ) {
                         item {
                             Spacer(modifier = Modifier.height(8.dp))
-                            MasterProgressCard(expenses = expenses, totalBudget = totalBudget)
+                            MasterProgressCard(expenses = expenses, totalBudget = totalBudget, currencySymbol = currencyPreference)
                         }
 
                         items(categoryLimits.entries.toList()) { limitEntry ->
@@ -209,7 +214,8 @@ fun HomeScreen(
                             CategoryProgressRow(
                                 categoryName = category,
                                 spentAmount = spentInCategory,
-                                limitAmount = limitAmount
+                                limitAmount = limitAmount,
+                                currencySymbol = currencyPreference
                             )
                         }
 
@@ -257,6 +263,8 @@ fun HomeScreen(
                     YearlyBarChart(monthlyTotals = monthlyTotals)
 
                     val yearlyTotal = yearlyExpenses.sumOf { it.amount }
+                    val formattedYearlyTotal = String.format(Locale.US, "%.2f", yearlyTotal)
+
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -271,7 +279,7 @@ fun HomeScreen(
                         ) {
                             Text("Σύνολο Έτους:", fontWeight = FontWeight.Bold)
                             Text(
-                                text = "€${String.format(Locale.US, "%.2f", yearlyTotal)}",
+                                text = if (currencyPreference == "$") "$$formattedYearlyTotal" else "$formattedYearlyTotal $currencyPreference",
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -296,6 +304,7 @@ fun HomeScreen(
                             val fullMonths = listOf("Ιανουάριος", "Φεβρουάριος", "Μάρτιος", "Απρίλιος", "Μάιος", "Ιούνιος", "Ιούλιος", "Αύγουστος", "Σεπτέμβριος", "Οκτώβριος", "Νοέμβριος", "Δεκέμβριος")
 
                             monthlyTotals.forEachIndexed { index, total ->
+                                val formattedTotal = String.format(Locale.US, "%.2f", total)
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -304,7 +313,7 @@ fun HomeScreen(
                                 ) {
                                     Text(fullMonths[index])
                                     Text(
-                                        text = "€${String.format(Locale.US, "%.2f", total)}",
+                                        text = if (currencyPreference == "$") "$$formattedTotal" else "$formattedTotal $currencyPreference",
                                         fontWeight = if (total > 0f) FontWeight.Bold else FontWeight.Normal,
                                         color = if (total > 0f) MaterialTheme.colorScheme.primary else Color.Gray
                                     )
@@ -323,16 +332,25 @@ fun HomeScreen(
 fun CategoryProgressRow(
     categoryName: String,
     spentAmount: Float,
-    limitAmount: Float
+    limitAmount: Float,
+    currencySymbol: String
 ) {
     val progress = if (limitAmount > 0f) (spentAmount / limitAmount).coerceIn(0f, 1f) else 0f
     val isOverBudget = spentAmount > limitAmount
     val barColor = if (isOverBudget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
     val percentText = if (limitAmount > 0f) "${((spentAmount / limitAmount) * 100).toInt()}%" else "0%"
 
+    val formattedSpent = String.format(Locale.US, "%.0f", spentAmount)
+    val formattedLimit = limitAmount.toInt().toString()
+    val limitText = if (currencySymbol == "$") {
+        "$$formattedSpent / $$formattedLimit"
+    } else {
+        "$formattedSpent $currencySymbol / $formattedLimit $currencySymbol"
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
@@ -349,7 +367,7 @@ fun CategoryProgressRow(
                     style = MaterialTheme.typography.titleSmall
                 )
                 Text(
-                    text = "€${String.format(Locale.US, "%.0f", spentAmount)} / €${limitAmount.toInt()}",
+                    text = limitText,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (isOverBudget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
@@ -392,11 +410,14 @@ fun CategoryProgressRow(
 
 // Master summary progress bar card
 @Composable
-fun MasterProgressCard(expenses: List<Expense>, totalBudget: Float) {
+fun MasterProgressCard(expenses: List<Expense>, totalBudget: Float, currencySymbol: String) {
     val totalSpent = expenses.sumOf { it.amount }.toFloat()
     val progress = if (totalBudget > 0f) (totalSpent / totalBudget).coerceIn(0f, 1f) else 0f
     val isOverBudget = totalSpent > totalBudget
     val remaining = (totalBudget - totalSpent).coerceAtLeast(0f)
+
+    val formattedSpent = String.format(Locale.US, "%.2f", totalSpent)
+    val formattedRemaining = String.format(Locale.US, "%.2f", remaining)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -417,7 +438,7 @@ fun MasterProgressCard(expenses: List<Expense>, totalBudget: Float) {
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
                     Text(
-                        text = "€${String.format(Locale.US, "%.2f", totalSpent)}",
+                        text = if (currencySymbol == "$") "$$formattedSpent" else "$formattedSpent $currencySymbol",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -430,7 +451,7 @@ fun MasterProgressCard(expenses: List<Expense>, totalBudget: Float) {
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
                     Text(
-                        text = "€${String.format(Locale.US, "%.2f", remaining)}",
+                        text = if (currencySymbol == "$") "$$formattedRemaining" else "$formattedRemaining $currencySymbol",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (isOverBudget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onPrimaryContainer
@@ -460,7 +481,7 @@ fun MasterProgressCard(expenses: List<Expense>, totalBudget: Float) {
 
 // Updated donut chart that supports remaining logic
 @Composable
-fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Float) {
+fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Float, currencySymbol: String) {
     val totalSpent = expenses.sumOf { it.amount }.toFloat()
 
     val categoryColors = listOf(
@@ -526,25 +547,29 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
                 val remaining = (totalBudget - totalSpent).coerceAtLeast(0f)
                 val isOver = totalSpent > totalBudget
 
+                val centerValue = if (isOver) totalSpent - totalBudget else remaining
+                val formattedValue = String.format(Locale.US, "%.2f", centerValue)
+
                 Text(
                     text = if (isOver) "Over Budget" else "Remaining",
                     style = MaterialTheme.typography.bodyLarge,
                     color = if (isOver) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "€${String.format(Locale.US, "%.2f", if (isOver) totalSpent - totalBudget else remaining)}",
+                    text = if (currencySymbol == "$") "$$formattedValue" else "$formattedValue $currencySymbol",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = if (isOver) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
                 )
             } else {
+                val formattedSpent = String.format(Locale.US, "%.2f", totalSpent)
                 Text(
                     text = "Spent",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "€${String.format(Locale.US, "%.2f", totalSpent)}",
+                    text = if (currencySymbol == "$") "$$formattedSpent" else "$formattedSpent $currencySymbol",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -611,9 +636,13 @@ fun YearlyBarChart(monthlyTotals: FloatArray) {
 @Composable
 fun ExpenseItem(
     expense: Expense,
+    currencySymbol: String,
     onDeleteClick: (Expense) -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
+
+    val formattedAmount = String.format(Locale.US, "%.2f", expense.amount)
+    val expenseText = if (currencySymbol == "$") "- $$formattedAmount" else "- $formattedAmount $currencySymbol"
 
     Card(
         modifier = Modifier
@@ -645,7 +674,7 @@ fun ExpenseItem(
                 )
             }
             Text(
-                text = "- €${String.format(Locale.US, "%.2f", expense.amount)}",
+                text = expenseText,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.error,
                 fontWeight = FontWeight.Bold

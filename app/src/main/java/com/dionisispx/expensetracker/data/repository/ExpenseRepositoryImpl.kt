@@ -26,4 +26,8 @@ class ExpenseRepositoryImpl @Inject constructor(
     override suspend fun deleteExpense(expense: Expense) {
         dao.deleteExpense(expense)
     }
+
+    override suspend fun deleteAllExpenses() {
+        dao.deleteAllExpenses()
+    }
 }

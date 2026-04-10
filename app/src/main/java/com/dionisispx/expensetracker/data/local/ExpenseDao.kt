@@ -31,4 +31,7 @@ interface ExpenseDao {
     // Get expenses only for a specific month
     @Query("SELECT * FROM expenses_table WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
     fun getExpensesByDateRange(startDate: Long, endDate: Long): Flow<List<Expense>>
+
+    @Query("DELETE FROM expenses_table")
+    suspend fun deleteAllExpenses()
 }
