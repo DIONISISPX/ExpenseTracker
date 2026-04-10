@@ -1,7 +1,6 @@
 package com.dionisispx.expensetracker.presentation.budget
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +21,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DirectionsCar
@@ -61,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -106,24 +107,23 @@ fun BudgetSettingsScreen(
     // Toggle between euro and percent modes
     var isPercentMode by remember { mutableStateOf(false) }
 
-    // Explicitly check for dark mode to force pure white in light mode
-    val isDark = isSystemInDarkTheme()
-    val cardColor = if (isDark) MaterialTheme.colorScheme.surfaceVariant else Color.White
+    // Unified card background color for both light and dark mode
+    val cardColor = MaterialTheme.colorScheme.surfaceVariant
 
-    // Define categories with specific icons and colors
+    // Define categories with vibrant colors to match the donut chart
     val categories = listOf(
-        CategoryData("Groceries", stringResource(R.string.cat_groceries), Icons.Default.ShoppingCart, Color(0xFFC8E6C9)),
-        CategoryData("Food & Drink", stringResource(R.string.cat_food_drink), Icons.Default.Restaurant, Color(0xFFFFCCBC)),
-        CategoryData("Transport & Fuel", stringResource(R.string.cat_transport), Icons.Default.DirectionsCar, Color(0xFFBBDEFB)),
-        CategoryData("Shopping", stringResource(R.string.cat_shopping), Icons.Default.LocalMall, Color(0xFFE1BEE7)),
-        CategoryData("Entertainment", stringResource(R.string.cat_entertainment), Icons.Default.Movie, Color(0xFFFFF9C4)),
-        CategoryData("Bills & Utilities", stringResource(R.string.cat_bills), Icons.Default.Receipt, Color(0xFFB2DFDB)),
-        CategoryData("Health & Fitness", stringResource(R.string.cat_health), Icons.Default.Favorite, Color(0xFFFFCDD2)),
-        CategoryData("Travel", stringResource(R.string.cat_travel), Icons.Default.Flight, Color(0xFFB2EBF2)),
-        CategoryData("Home", stringResource(R.string.cat_home), Icons.Default.Home, Color(0xFFD7CCC8)),
-        CategoryData("Education", stringResource(R.string.cat_education), Icons.Default.School, Color(0xFFF5F5F5)),
-        CategoryData("Personal Care", stringResource(R.string.cat_personal), Icons.Default.Spa, Color(0xFFF8BBD0)),
-        CategoryData("Other", stringResource(R.string.cat_other), Icons.Default.MoreHoriz, Color(0xFFCFD8DC))
+        CategoryData("Groceries", stringResource(R.string.cat_groceries), Icons.Default.ShoppingCart, Color(0xFF81C784)),
+        CategoryData("Food & Drink", stringResource(R.string.cat_food_drink), Icons.Default.Restaurant, Color(0xFFFF8A65)),
+        CategoryData("Transport & Fuel", stringResource(R.string.cat_transport), Icons.Default.DirectionsCar, Color(0xFF64B5F6)),
+        CategoryData("Shopping", stringResource(R.string.cat_shopping), Icons.Default.LocalMall, Color(0xFFBA68C8)),
+        CategoryData("Entertainment", stringResource(R.string.cat_entertainment), Icons.Default.Movie, Color(0xFFFFD54F)),
+        CategoryData("Bills & Utilities", stringResource(R.string.cat_bills), Icons.Default.Receipt, Color(0xFF4DB6AC)),
+        CategoryData("Health & Fitness", stringResource(R.string.cat_health), Icons.Default.Favorite, Color(0xFFE57373)),
+        CategoryData("Travel", stringResource(R.string.cat_travel), Icons.Default.Flight, Color(0xFF7986CB)),
+        CategoryData("Home", stringResource(R.string.cat_home), Icons.Default.Home, Color(0xFFA1887F)),
+        CategoryData("Education", stringResource(R.string.cat_education), Icons.Default.School, Color(0xFFFFB74D)),
+        CategoryData("Personal Care", stringResource(R.string.cat_personal), Icons.Default.Spa, Color(0xFFF06292)),
+        CategoryData("Other", stringResource(R.string.cat_other), Icons.Default.MoreHoriz, Color(0xFF90A4AE))
     )
 
     Scaffold(
@@ -132,7 +132,7 @@ fun BudgetSettingsScreen(
                 title = { Text(stringResource(R.string.set_budget_limits), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
@@ -345,13 +345,17 @@ fun CategoryLimitRow(
         maxAllowedEur.toLong()
     }
 
+    val isAppDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    // Ensure pure white in light mode, and blend into surfaceVariant in dark mode for the cutout effect
+    val iconTint = if (isAppDark) MaterialTheme.colorScheme.surfaceVariant else Color.White
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.Top
     ) {
-        // Colored icon background
+        // Box ensures absolute explicit control over the tint
         Box(
             modifier = Modifier
                 .padding(top = 4.dp)
@@ -362,7 +366,7 @@ fun CategoryLimitRow(
             Icon(
                 imageVector = categoryData.icon,
                 contentDescription = categoryData.displayName,
-                tint = Color.Black.copy(alpha = 0.7f)
+                tint = iconTint
             )
         }
 
@@ -473,13 +477,13 @@ fun CategoryLimitRow(
 // Custom integer input component with dynamic layout
 @Composable
 fun MinimalistIntegerInput(
+    modifier: Modifier = Modifier,
     value: String,
     onValueChange: (String) -> Unit,
     labelSymbol: String,
     maxValue: Long,
     fontSize: TextUnit,
-    isSymbolOnLeft: Boolean = false,
-    modifier: Modifier = Modifier
+    isSymbolOnLeft: Boolean = false
 ) {
     Row(
         verticalAlignment = Alignment.Bottom,
