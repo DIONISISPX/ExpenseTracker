@@ -1,7 +1,10 @@
 package com.dionisispx.expensetracker.presentation.add_expense
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -33,6 +36,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FlashOff
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -50,20 +55,25 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.exifinterface.media.ExifInterface
@@ -90,11 +100,23 @@ fun AddExpenseScreen(
     onNavigateBack: () -> Unit,
     viewModel: ExpenseViewModel = hiltViewModel()
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) }
-    var storeName by remember { mutableStateOf("") }
-    var amount by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("Other") }
-    var isConfirmingScan by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    // Lock screen orientation to portrait to prevent camera aspect ratio squishing and UI disappearing
+    DisposableEffect(Unit) {
+        val activity = context.findActivity()
+        val originalOrientation = activity?.requestedOrientation ?: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        onDispose {
+            activity?.requestedOrientation = originalOrientation
+        }
+    }
+
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    var storeName by rememberSaveable { mutableStateOf("") }
+    var amount by rememberSaveable { mutableStateOf("") }
+    var category by rememberSaveable { mutableStateOf("Other") }
+    var isConfirmingScan by rememberSaveable { mutableStateOf(false) }
 
     // Fetch the smart dictionary from the view model
     val userDictionary by viewModel.userDictionary.collectAsState()
@@ -198,7 +220,10 @@ fun CameraUI(
     val imageCapture = remember { ImageCapture.Builder().build() }
 
     val sound = remember { MediaActionSound().apply { load(MediaActionSound.SHUTTER_CLICK) } }
-    var isProcessing by remember { mutableStateOf(false) }
+    var isProcessing by rememberSaveable { mutableStateOf(false) }
+
+    // Changed to standard remember so it resets to false when leaving the camera tab
+    var flashEnabled by remember { mutableStateOf(false) }
 
     var hasCameraPermission by remember {
         mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
@@ -229,7 +254,10 @@ fun CameraUI(
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (hasCameraPermission) {
-            CameraPreview(imageCapture = imageCapture)
+            CameraPreview(
+                imageCapture = imageCapture,
+                flashEnabled = flashEnabled
+            )
         } else {
             Box(modifier = Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
                 Text(stringResource(R.string.camera_permission_required), color = Color.White)
@@ -254,7 +282,20 @@ fun CameraUI(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(modifier = Modifier.weight(1f))
+
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                IconButton(
+                    onClick = { flashEnabled = !flashEnabled },
+                    enabled = !isProcessing
+                ) {
+                    Icon(
+                        imageVector = if (flashEnabled) Icons.Default.FlashOn else Icons.Default.FlashOff,
+                        contentDescription = "Toggle Flash",
+                        tint = if (isProcessing) Color.Gray else Color.White,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
 
             Box(
                 modifier = Modifier
@@ -318,7 +359,6 @@ fun ManualExpenseForm(
         Pair("Other", stringResource(R.string.cat_other))
     )
 
-    // Dynamically place currency symbol in the text field label
     val amountLabel = if (currencySymbol == "$") {
         stringResource(R.string.amount_label_left, currencySymbol)
     } else {
@@ -327,10 +367,20 @@ fun ManualExpenseForm(
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         OutlinedTextField(
-            value = storeName, onValueChange = onStoreNameChange,
+            value = storeName,
+            // Let the text update naturally to prevent lag and dropped keystrokes
+            onValueChange = onStoreNameChange,
             label = { Text(stringResource(R.string.store_name)) },
             placeholder = { Text(stringResource(R.string.store_name_placeholder), color = Color.Gray) },
-            modifier = Modifier.fillMaxWidth(), singleLine = true
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            // Visually transform the text to uppercase on the screen
+            visualTransformation = { text ->
+                TransformedText(
+                    AnnotatedString(text.text.uppercase()),
+                    OffsetMapping.Identity
+                )
+            }
         )
 
         OutlinedTextField(
@@ -349,7 +399,12 @@ fun ManualExpenseForm(
                 label = { Text(stringResource(R.string.category)) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) },
                 colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-                modifier = Modifier.menuAnchor().fillMaxWidth()
+                modifier = Modifier
+                    .menuAnchor(
+                        type = androidx.compose.material3.MenuAnchorType.PrimaryNotEditable,
+                        enabled = true
+                    )
+                    .fillMaxWidth()
             )
             ExposedDropdownMenu(expanded = isDropdownExpanded, onDismissRequest = { isDropdownExpanded = false }) {
                 categories.forEach { (internalName, displayName) ->
@@ -371,7 +426,8 @@ fun ManualExpenseForm(
             onClick = {
                 if (storeName.isNotBlank() && amount.isNotBlank()) {
                     val newExpense = Expense(
-                        storeName = storeName,
+                        // 3. Force it to uppercase right before saving to the database
+                        storeName = storeName.uppercase(),
                         amount = amount.replace(",", ".").toDoubleOrNull() ?: 0.0,
                         category = category,
                         date = System.currentTimeMillis()
@@ -388,6 +444,12 @@ fun ManualExpenseForm(
 
 // Helper functions
 
+fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
+
 private fun takePhoto(context: Context, imageCapture: ImageCapture, onPhotoTaken: (Uri) -> Unit) {
     val photoFile = File(context.cacheDir, "receipt_${System.currentTimeMillis()}.jpg")
     val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
@@ -401,7 +463,7 @@ private fun takePhoto(context: Context, imageCapture: ImageCapture, onPhotoTaken
     })
 }
 
-// Visual character normalizer for greek ocr mistakes
+// Visual character normalizer for greek OCR mistakes
 private fun normalizeForFuzzy(input: String): String {
     return input.uppercase()
         .replace("V", "Ψ")
@@ -424,7 +486,7 @@ private fun normalizeForFuzzy(input: String): String {
         .replace("U", "Υ")
 }
 
-// Google cloud vision api integration
+// Google cloud vision API integration
 private fun processImageWithCloudVision(
     context: Context,
     uri: Uri,
@@ -534,7 +596,7 @@ private fun levenshteinDistance(lhs: CharSequence, rhs: CharSequence): Int {
     return cost[len0 - 1]
 }
 
-// Ai parser logic
+// AI parser logic
 private fun extractDataFromText(
     text: String,
     userDictionary: Map<String, String>
@@ -618,7 +680,7 @@ private fun extractDataFromText(
     // Combine dictionaries
     val combinedDictionary = seedDictionary + userDictionary
 
-    // Store extraction using multi word phrase matching
+    // Store extraction using multi-word phrase matching
     var bestMatchScore = 0.0
 
     val phrases = mutableListOf<String>()
@@ -704,7 +766,7 @@ private fun extractDataFromText(
                 val normalizedStr = match.value.replace(",", ".").replace("-", ".")
                 val num = normalizedStr.toDoubleOrNull() ?: 0.0
 
-                // Hard exclude greek vat rates and zero
+                // Hard exclude greek VAT rates and zero
                 if (num != 13.00 && num != 24.00 && num != 6.00 && num != 0.0) {
                     validNumbers.add(num)
                 }
@@ -716,7 +778,7 @@ private fun extractDataFromText(
             val tail = validNumbers.takeLast(4)
             var foundByMath = false
 
-            // Scenario a card payment where amount appears twice
+            // Scenario A: Card payment where amount appears twice
             for (i in 0 until tail.size - 1) {
                 if (tail[i] == tail[i+1]) {
                     finalAmount = String.format(java.util.Locale.US, "%.2f", tail[i])
@@ -725,7 +787,7 @@ private fun extractDataFromText(
                 }
             }
 
-            // Scenario b cash payment where total plus change is cash given
+            // Scenario B: Cash payment where total plus change is cash given
             if (!foundByMath && tail.size >= 3) {
                 val a = tail[tail.size - 3]
                 val b = tail[tail.size - 2]
@@ -740,7 +802,7 @@ private fun extractDataFromText(
                 }
             }
 
-            // Scenario c fallback to max number
+            // Scenario C: Fallback to max number
             if (!foundByMath) {
                 val maxNum = validNumbers.maxOrNull() ?: 0.0
                 finalAmount = String.format(java.util.Locale.US, "%.2f", maxNum)
