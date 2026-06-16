@@ -40,6 +40,16 @@ class ExpenseViewModel @Inject constructor(
     private val _yearlyExpenses = MutableStateFlow<List<Expense>>(emptyList())
     val yearlyExpenses: StateFlow<List<Expense>> = _yearlyExpenses.asStateFlow()
 
+    val monthlyTotals: StateFlow<FloatArray> = _yearlyExpenses.map { expenses ->
+        val totals = FloatArray(12)
+        expenses.forEach { expense ->
+            val date = java.time.Instant.ofEpochMilli(expense.date).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+            val monthIndex = date.monthValue - 1
+            totals[monthIndex] += expense.amount.toFloat()
+        }
+        totals
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FloatArray(12) { 0f })
+
     // Read real budget limits from data store
     val totalBudget: StateFlow<Float> = prefsRepository.totalBudget.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), 1000f
@@ -68,9 +78,9 @@ class ExpenseViewModel @Inject constructor(
     val userDictionary: StateFlow<Map<String, String>> = repository.getAllExpenses()
         .map { allExpenses ->
             val dict = mutableMapOf<String, String>()
-            // Sort by date oldest first to ensure newest category overwrites the old one
+            // Sort by date (oldest first) to ensure newest category overwrites the old one
             allExpenses.sortedBy { it.date }.forEach { expense ->
-                // Uppercase to match the ocr output format perfectly
+                // Uppercase to match the OCR output format perfectly
                 dict[expense.storeName.uppercase()] = expense.category
             }
             dict
