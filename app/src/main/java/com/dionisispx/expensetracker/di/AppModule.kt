@@ -23,6 +23,18 @@ abstract class AppModule {
         expenseRepositoryImpl: ExpenseRepositoryImpl
     ): ExpenseRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindVisionRepository(
+        visionRepositoryImpl: com.dionisispx.expensetracker.data.repository.VisionRepositoryImpl
+    ): com.dionisispx.expensetracker.domain.repository.VisionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindImageProcessor(
+        androidImageProcessor: com.dionisispx.expensetracker.data.util.AndroidImageProcessor
+    ): com.dionisispx.expensetracker.domain.util.ImageProcessor
+
     companion object {
         @Provides
         @Singleton
