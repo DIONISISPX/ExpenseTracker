@@ -14,7 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.dionisispx.expensetracker.presentation.ExpenseViewModel
+import com.dionisispx.expensetracker.presentation.SharedViewModel
 import com.dionisispx.expensetracker.presentation.navigation.MainScreen
 import com.dionisispx.expensetracker.ui.theme.ExpenseTrackerTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val viewModel: ExpenseViewModel = hiltViewModel()
+            val viewModel: SharedViewModel = hiltViewModel()
             val themePreference by viewModel.themePreference.collectAsState()
             val languagePreference by viewModel.languagePreference.collectAsState()
 

@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AddExpenseViewModel @Inject constructor(
+class AddSharedViewModel @Inject constructor(
     private val imageProcessor: ImageProcessor,
     private val visionRepository: VisionRepository,
     private val analyzeReceiptUseCase: AnalyzeReceiptUseCase,

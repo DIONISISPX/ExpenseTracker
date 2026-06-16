@@ -2,16 +2,15 @@ package com.dionisispx.expensetracker.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.dionisispx.expensetracker.domain.model.Expense
+import com.dionisispx.expensetracker.data.local.entity.ExpenseEntity
 
-// Main database class
+// Holds the entire database
 @Database(
-    entities = [Expense::class],
+    entities = [ExpenseEntity::class],
     version = 2,
     exportSchema = false
 )
-abstract class ExpenseDatabase : RoomDatabase() {
+abstract class ExpenseDatabase: RoomDatabase() {
 
-    // DAO access
     abstract val dao: ExpenseDao
 }

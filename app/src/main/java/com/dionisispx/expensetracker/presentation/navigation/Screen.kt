@@ -16,4 +16,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector?
 
     // Settings screen
     object Settings : Screen("settings", "Settings", Icons.Default.Settings)
+
+    // Budget settings screen
+    object BudgetSettings : Screen("budget_settings", "Budget Settings", null)
 }

@@ -1,10 +1,11 @@
-package com.dionisispx.expensetracker.data.local
+package com.dionisispx.expensetracker.data.repository
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.dionisispx.expensetracker.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -15,22 +16,24 @@ import javax.inject.Singleton
 val Context.dataStore by preferencesDataStore(name = "user_prefs")
 
 @Singleton
-class UserPreferencesRepository @Inject constructor(
+class UserPreferencesRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context
-) {
+) : UserPreferencesRepository {
+
     // Keys for saving data safely
     private val totalBudgetKey = floatPreferencesKey("total_budget")
     private val categoryLimitsKey = stringPreferencesKey("category_limits")
     private val themePreferenceKey = stringPreferencesKey("theme_preference")
     private val currencyPreferenceKey = stringPreferencesKey("currency_preference")
+    private val languagePreferenceKey = stringPreferencesKey("language_preference")
 
     // Flow to read total budget defaulting to 1000
-    val totalBudget: Flow<Float> = context.dataStore.data.map { preferences ->
+    override val totalBudget: Flow<Float> = context.dataStore.data.map { preferences ->
         preferences[totalBudgetKey] ?: 1000f
     }
 
     // Flow to read category limits from JSON string
-    val categoryLimits: Flow<Map<String, Float>> = context.dataStore.data.map { preferences ->
+    override val categoryLimits: Flow<Map<String, Float>> = context.dataStore.data.map { preferences ->
         val jsonString = preferences[categoryLimitsKey] ?: "{}"
         try {
             val jsonObject = JSONObject(jsonString)
@@ -45,30 +48,28 @@ class UserPreferencesRepository @Inject constructor(
     }
 
     // Flow to read theme preference defaulting to system setting
-    val themePreference: Flow<String> = context.dataStore.data.map { preferences ->
+    override val themePreference: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[themePreferenceKey] ?: "system"
     }
 
     // Flow to read currency preference defaulting to euro
-    val currencyPreference: Flow<String> = context.dataStore.data.map { preferences ->
+    override val currencyPreference: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[currencyPreferenceKey] ?: "€"
     }
 
-    private val languagePreferenceKey = stringPreferencesKey("language_preference")
-
-    val languagePreference: Flow<String> = context.dataStore.data.map { preferences ->
+    override val languagePreference: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[languagePreferenceKey] ?: "el"
     }
 
     // Write budget to disk
-    suspend fun saveTotalBudget(budget: Float) {
+    override suspend fun saveTotalBudget(budget: Float) {
         context.dataStore.edit { preferences ->
             preferences[totalBudgetKey] = budget
         }
     }
 
     // Write limits to disk
-    suspend fun saveCategoryLimits(limits: Map<String, Float>) {
+    override suspend fun saveCategoryLimits(limits: Map<String, Float>) {
         context.dataStore.edit { preferences ->
             val jsonObject = JSONObject()
             limits.forEach { (key, value) ->
@@ -79,20 +80,20 @@ class UserPreferencesRepository @Inject constructor(
     }
 
     // Write theme preference to disk
-    suspend fun saveThemePreference(theme: String) {
+    override suspend fun saveThemePreference(theme: String) {
         context.dataStore.edit { preferences ->
             preferences[themePreferenceKey] = theme
         }
     }
 
     // Write currency preference to disk
-    suspend fun saveCurrencyPreference(currency: String) {
+    override suspend fun saveCurrencyPreference(currency: String) {
         context.dataStore.edit { preferences ->
             preferences[currencyPreferenceKey] = currency
         }
     }
 
-    suspend fun saveLanguagePreference(language: String) {
+    override suspend fun saveLanguagePreference(language: String) {
         context.dataStore.edit { preferences ->
             preferences[languagePreferenceKey] = language
         }

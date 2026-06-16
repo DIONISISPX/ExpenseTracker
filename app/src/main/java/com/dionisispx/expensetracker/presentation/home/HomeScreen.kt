@@ -37,7 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dionisispx.expensetracker.R
-import com.dionisispx.expensetracker.presentation.ExpenseViewModel
+import com.dionisispx.expensetracker.presentation.SharedViewModel
 import com.dionisispx.expensetracker.presentation.home.components.dashboard.MonthSelectorAndChart
 import com.dionisispx.expensetracker.presentation.home.components.dashboard.SubTabPager
 import com.dionisispx.expensetracker.presentation.home.components.history.HistoryBreakdown
@@ -45,7 +45,7 @@ import com.dionisispx.expensetracker.presentation.home.components.history.Histor
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
-    viewModel: ExpenseViewModel = hiltViewModel()
+    viewModel: SharedViewModel = hiltViewModel()
 ) {
     // Observe database and view model states
     val expenses by viewModel.expenses.collectAsState()

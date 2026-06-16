@@ -33,7 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dionisispx.expensetracker.R
-import com.dionisispx.expensetracker.presentation.ExpenseViewModel
+import com.dionisispx.expensetracker.presentation.SharedViewModel
 import com.dionisispx.expensetracker.presentation.add_expense.components.CameraUI
 import com.dionisispx.expensetracker.presentation.add_expense.components.ManualExpenseForm
 
@@ -41,8 +41,8 @@ import com.dionisispx.expensetracker.presentation.add_expense.components.ManualE
 @Composable
 fun AddExpenseScreen(
     onNavigateBack: () -> Unit,
-    addExpenseViewModel: AddExpenseViewModel = hiltViewModel(),
-    expenseViewModel: ExpenseViewModel = hiltViewModel()
+    addSharedViewModel: AddSharedViewModel = hiltViewModel(),
+    expenseViewModel: SharedViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
 
@@ -58,11 +58,11 @@ fun AddExpenseScreen(
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
-    val storeName by addExpenseViewModel.storeName.collectAsState()
-    val amount by addExpenseViewModel.amount.collectAsState()
-    val category by addExpenseViewModel.category.collectAsState()
-    val isConfirmingScan by addExpenseViewModel.isConfirmingScan.collectAsState()
-    val isProcessing by addExpenseViewModel.isProcessing.collectAsState()
+    val storeName by addSharedViewModel.storeName.collectAsState()
+    val amount by addSharedViewModel.amount.collectAsState()
+    val category by addSharedViewModel.category.collectAsState()
+    val isConfirmingScan by addSharedViewModel.isConfirmingScan.collectAsState()
+    val isProcessing by addSharedViewModel.isProcessing.collectAsState()
 
     // Fetch currency preference
     val currencyPreference by expenseViewModel.currencyPreference.collectAsState()
@@ -75,10 +75,10 @@ fun AddExpenseScreen(
     // Handle navigation back logic based on current state
     val handleBackPress = {
         if (isConfirmingScan) {
-            addExpenseViewModel.setConfirmingScan(false)
-            addExpenseViewModel.updateStoreName("")
-            addExpenseViewModel.updateAmount("")
-            addExpenseViewModel.updateCategory("Other")
+            addSharedViewModel.setConfirmingScan(false)
+            addSharedViewModel.updateStoreName("")
+            addSharedViewModel.updateAmount("")
+            addSharedViewModel.updateCategory("Other")
         } else {
             onNavigateBack()
         }
@@ -117,11 +117,11 @@ fun AddExpenseScreen(
                 if (isConfirmingScan) {
                     ManualExpenseForm(
                         storeName = storeName,
-                        onStoreNameChange = { addExpenseViewModel.updateStoreName(it) },
+                        onStoreNameChange = { addSharedViewModel.updateStoreName(it) },
                         amount = amount,
-                        onAmountChange = { addExpenseViewModel.updateAmount(it) },
+                        onAmountChange = { addSharedViewModel.updateAmount(it) },
                         category = category,
-                        onCategoryChange = { addExpenseViewModel.updateCategory(it) },
+                        onCategoryChange = { addSharedViewModel.updateCategory(it) },
                         currencySymbol = currencyPreference,
                         onNavigateBack = onNavigateBack,
                         viewModel = expenseViewModel
@@ -130,17 +130,17 @@ fun AddExpenseScreen(
                     CameraUI(
                         isProcessing = isProcessing,
                         onImageSelected = { uriString ->
-                            addExpenseViewModel.processImage(uriString)
+                            addSharedViewModel.processImage(uriString)
                         }
                     )
                 } else {
                     ManualExpenseForm(
                         storeName = storeName,
-                        onStoreNameChange = { addExpenseViewModel.updateStoreName(it) },
+                        onStoreNameChange = { addSharedViewModel.updateStoreName(it) },
                         amount = amount,
-                        onAmountChange = { addExpenseViewModel.updateAmount(it) },
+                        onAmountChange = { addSharedViewModel.updateAmount(it) },
                         category = category,
-                        onCategoryChange = { addExpenseViewModel.updateCategory(it) },
+                        onCategoryChange = { addSharedViewModel.updateCategory(it) },
                         currencySymbol = currencyPreference,
                         onNavigateBack = onNavigateBack,
                         viewModel = expenseViewModel

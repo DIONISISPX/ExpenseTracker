@@ -55,7 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.domain.model.Expense
-import com.dionisispx.expensetracker.presentation.ExpenseViewModel
+import com.dionisispx.expensetracker.presentation.SharedViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -65,7 +65,7 @@ import java.util.Locale
 @Composable
 fun SettingsScreen(
     onNavigateToBudget: () -> Unit,
-    viewModel: ExpenseViewModel = hiltViewModel()
+    viewModel: SharedViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()

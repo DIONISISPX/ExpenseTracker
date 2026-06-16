@@ -74,14 +74,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dionisispx.expensetracker.R
-import com.dionisispx.expensetracker.presentation.ExpenseViewModel
+import com.dionisispx.expensetracker.presentation.SharedViewModel
+import com.dionisispx.expensetracker.presentation.util.getCategoryDetails
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BudgetSettingsScreen(
     onNavigateBack: () -> Unit,
-    viewModel: ExpenseViewModel = hiltViewModel()
+    viewModel: SharedViewModel = hiltViewModel()
 ) {
     // Observe database values
     val savedTotalBudget by viewModel.totalBudget.collectAsState()
@@ -112,19 +113,28 @@ fun BudgetSettingsScreen(
 
     // Define categories with vibrant colors to match the donut chart
     val categories = listOf(
-        CategoryData("Groceries", stringResource(R.string.cat_groceries), Icons.Default.ShoppingCart, Color(0xFF81C784)),
-        CategoryData("Food & Drink", stringResource(R.string.cat_food_drink), Icons.Default.Restaurant, Color(0xFFFF8A65)),
-        CategoryData("Transport & Fuel", stringResource(R.string.cat_transport), Icons.Default.DirectionsCar, Color(0xFF64B5F6)),
-        CategoryData("Shopping", stringResource(R.string.cat_shopping), Icons.Default.LocalMall, Color(0xFFBA68C8)),
-        CategoryData("Entertainment", stringResource(R.string.cat_entertainment), Icons.Default.Movie, Color(0xFFFFD54F)),
-        CategoryData("Bills & Utilities", stringResource(R.string.cat_bills), Icons.Default.Receipt, Color(0xFF4DB6AC)),
-        CategoryData("Health & Fitness", stringResource(R.string.cat_health), Icons.Default.Favorite, Color(0xFFE57373)),
-        CategoryData("Travel", stringResource(R.string.cat_travel), Icons.Default.Flight, Color(0xFF7986CB)),
-        CategoryData("Home", stringResource(R.string.cat_home), Icons.Default.Home, Color(0xFFA1887F)),
-        CategoryData("Education", stringResource(R.string.cat_education), Icons.Default.School, Color(0xFFFFB74D)),
-        CategoryData("Personal Care", stringResource(R.string.cat_personal), Icons.Default.Spa, Color(0xFFF06292)),
-        CategoryData("Other", stringResource(R.string.cat_other), Icons.Default.MoreHoriz, Color(0xFF90A4AE))
-    )
+        "Groceries", "Food & Drink", "Transport & Fuel", "Shopping",
+        "Entertainment", "Bills & Utilities", "Health & Fitness",
+        "Travel", "Home", "Education", "Personal Care", "Other"
+    ).map { categoryName ->
+        val localizedName = when (categoryName) {
+            "Groceries" -> stringResource(R.string.cat_groceries)
+            "Food & Drink" -> stringResource(R.string.cat_food_drink)
+            "Transport & Fuel" -> stringResource(R.string.cat_transport)
+            "Shopping" -> stringResource(R.string.cat_shopping)
+            "Entertainment" -> stringResource(R.string.cat_entertainment)
+            "Bills & Utilities" -> stringResource(R.string.cat_bills)
+            "Health & Fitness" -> stringResource(R.string.cat_health)
+            "Travel" -> stringResource(R.string.cat_travel)
+            "Home" -> stringResource(R.string.cat_home)
+            "Education" -> stringResource(R.string.cat_education)
+            "Personal Care" -> stringResource(R.string.cat_personal)
+            "Other" -> stringResource(R.string.cat_other)
+            else -> categoryName
+        }
+        val details = getCategoryDetails(categoryName)
+        CategoryData(categoryName, localizedName, details.first, details.second)
+    }
 
     Scaffold(
         topBar = {

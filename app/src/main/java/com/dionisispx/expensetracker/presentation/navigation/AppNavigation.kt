@@ -54,7 +54,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     val currentRoute = navBackStackEntry?.destination?.route
 
     // Boolean to check if we should show the bottom bar (hide it on AddExpense and Budget settings)
-    val showBottomBar = currentRoute != Screen.AddExpense.route && currentRoute != "budget_settings"
+    val showBottomBar = currentRoute != Screen.AddExpense.route && currentRoute != Screen.BudgetSettings.route
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -153,12 +153,12 @@ fun MainScreen(modifier: Modifier = Modifier) {
             composable(Screen.Settings.route) {
                 SettingsScreen(
                     onNavigateToBudget = {
-                        navController.navigate("budget_settings")
+                        navController.navigate(Screen.BudgetSettings.route)
                     }
                 )
             }
             // Add budget settings route
-            composable("budget_settings") {
+            composable(Screen.BudgetSettings.route) {
                 BudgetSettingsScreen(
                     onNavigateBack = {
                         navController.popBackStack()

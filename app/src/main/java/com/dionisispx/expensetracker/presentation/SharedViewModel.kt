@@ -2,7 +2,7 @@ package com.dionisispx.expensetracker.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dionisispx.expensetracker.data.local.UserPreferencesRepository
+import com.dionisispx.expensetracker.domain.repository.UserPreferencesRepository
 import com.dionisispx.expensetracker.domain.model.Expense
 import com.dionisispx.expensetracker.domain.repository.ExpenseRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +20,7 @@ import java.time.ZoneId
 import javax.inject.Inject
 
 @HiltViewModel
-class ExpenseViewModel @Inject constructor(
+class SharedViewModel @Inject constructor(
     private val repository: ExpenseRepository,
     private val prefsRepository: UserPreferencesRepository
 ) : ViewModel() {

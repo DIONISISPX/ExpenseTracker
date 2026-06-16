@@ -35,6 +35,12 @@ abstract class AppModule {
         androidImageProcessor: com.dionisispx.expensetracker.data.util.AndroidImageProcessor
     ): com.dionisispx.expensetracker.domain.util.ImageProcessor
 
+    @Binds
+    @Singleton
+    abstract fun bindUserPreferencesRepository(
+        userPreferencesRepositoryImpl: com.dionisispx.expensetracker.data.repository.UserPreferencesRepositoryImpl
+    ): com.dionisispx.expensetracker.domain.repository.UserPreferencesRepository
+
     companion object {
         @Provides
         @Singleton

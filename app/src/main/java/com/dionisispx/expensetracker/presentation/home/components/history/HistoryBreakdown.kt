@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.dionisispx.expensetracker.domain.model.Expense
-import com.dionisispx.expensetracker.presentation.ExpenseViewModel
+import com.dionisispx.expensetracker.presentation.SharedViewModel
 import com.dionisispx.expensetracker.presentation.home.components.charts.YearlyBarChart
 
 @Composable
@@ -20,7 +20,7 @@ fun HistoryBreakdown(
     currentYear: Int,
     currencyPreference: String,
     isLandscape: Boolean,
-    viewModel: ExpenseViewModel,
+    viewModel: SharedViewModel,
     modifier: Modifier = Modifier
 ) {
     if (isLandscape) {
