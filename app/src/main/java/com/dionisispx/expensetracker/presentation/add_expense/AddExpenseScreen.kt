@@ -464,8 +464,21 @@ private fun takePhoto(context: Context, imageCapture: ImageCapture, onPhotoTaken
 }
 
 // Visual character normalizer for greek OCR mistakes
+private fun stripGreekAccents(input: String): String {
+    return input
+        .replace("Ά", "Α")
+        .replace("Έ", "Ε")
+        .replace("Ή", "Η")
+        .replace("Ί", "Ι")
+        .replace("Ό", "Ο")
+        .replace("Ύ", "Υ")
+        .replace("Ώ", "Ω")
+        .replace("Ϊ", "Ι")
+        .replace("Ϋ", "Υ")
+}
+
 private fun normalizeForFuzzy(input: String): String {
-    return input.uppercase()
+    return stripGreekAccents(input.uppercase())
         .replace("V", "Ψ")
         .replace("S", "Σ")
         .replace("C", "Σ")
@@ -522,9 +535,16 @@ private fun processImageWithCloudVision(
                 }
                 val processedBitmap = Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.width, originalBitmap.height, matrix, true)
 
+                // Clean up original bitmap if it's different from the processed one
+                if (processedBitmap != originalBitmap) {
+                    originalBitmap.recycle()
+                }
+
                 // Convert to base64
                 val byteArrayOutputStream = ByteArrayOutputStream()
                 processedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream)
+                processedBitmap.recycle() // Clean up after compression
+
                 val imageBytes = byteArrayOutputStream.toByteArray()
                 val base64Image = Base64.encodeToString(imageBytes, Base64.NO_WRAP)
 
@@ -553,6 +573,8 @@ private fun processImageWithCloudVision(
                 withContext(Dispatchers.Main) {
                     onScanComplete(store, parsedAmount, category)
                 }
+            } else {
+                withContext(Dispatchers.Main) { onScanComplete("", "", "Other") }
             }
         } catch (e: Exception) {
             Log.e("CloudVision", "Network or Parsing Error", e)
@@ -597,7 +619,7 @@ private fun levenshteinDistance(lhs: CharSequence, rhs: CharSequence): Int {
 }
 
 // AI parser logic
-private fun extractDataFromText(
+internal fun extractDataFromText(
     text: String,
     userDictionary: Map<String, String>
 ): Triple<String, String, String> {
@@ -607,9 +629,27 @@ private fun extractDataFromText(
 
     val upperText = text.uppercase()
 
-    // Strip quotes and brackets to help fuzzy matching find exact words
-    val cleanTextForNames = upperText.replace("\"", "").replace("'", "").replace("«", "").replace("»", "")
-    val words = cleanTextForNames.split(Regex("\\s+")).filter { it.isNotBlank() }
+    // Strip quotes, brackets, and replace dots/commas with spaces for clean word boundary checks
+    val cleanTextForNames = upperText
+        .replace("\"", "")
+        .replace("'", "")
+        .replace("«", "")
+        .replace("»", "")
+        .replace(".", " ")
+        .replace(",", " ")
+
+    val companySuffixes = setOf(
+        "ΙΚΕ", "IKE", "ΑΕ", "AE", "ΕΠΕ", "EPE", "ΟΕ", "OE", "ΕΕ", "EE",
+        "ΜΙΚΕ", "MIKE", "ΜΕΠΕ", "MEPE", "ΑΕΒΕ", "AEBE"
+    )
+
+    val words = cleanTextForNames.split(Regex("\\s+"))
+        .filter { it.isNotBlank() }
+        .map { it.trim() }
+        .filter { word ->
+            val normalizedWord = stripGreekAccents(normalizeForFuzzy(word))
+            normalizedWord !in companySuffixes
+        }
 
     // Seed dictionary
     val seedDictionary = mapOf(
@@ -636,7 +676,7 @@ private fun extractDataFromText(
         "VILLAGE" to "Entertainment",
         "OPTIONS" to "Entertainment",
 
-        "OASA" to "Transport & Fuel",
+        "Ο.Α.Σ.Α." to "Transport & Fuel",
         "ΣΤΑΣΥ" to "Transport & Fuel",
         "EKO" to "Transport & Fuel",
         "BP" to "Transport & Fuel",
@@ -725,16 +765,21 @@ private fun extractDataFromText(
     val ignoreKeywords = listOf(
         "ΜΕΤΡΗΤΑ", "ΚΑΡΤΑ", "ΠΙΣΤΩΤΙΚΗ ΚΑΡΤΑ", "ΠΛΗΡΩΜΗ ΜΕ ΚΑΡΤΑ",
         "ΑΜΕΣΗ ΚΑΡΤΑ", "ΚΑΡΤΑ-1", "Π. ΚΑΡΤΑ", "ΠΙΣΤ. ΚΑΡΤΑ",
-        "ΡΕΣΤΑ", "CHANGE", "ΤΗΛ", "ΑΦΜ", "ΔΟΥ", "CARD"
+        "ΡΕΣΤΑ", "CHANGE", "ΤΗΛ", "ΑΦΜ", "ΔΟΥ", "CARD",
+        "ΠΟΣΟΤΗΤΑ", "ΠΟΣΟΤΗΤΑΣ", "ΠΟΣΟΤ.", "QTY", "QUANTITY"
     )
 
     for (i in lines.indices) {
         val line = lines[i]
 
-        val normalizedLine = line.replace(" ", "").replace("0", "Ο").replace("1", "Ι")
+        val cleanLine = stripGreekAccents(line)
+        val normalizedLine = cleanLine.replace(" ", "").replace("0", "Ο").replace("1", "Ι")
 
-        val containsTotal = totalKeywords.any { line.contains(it) || normalizedLine.contains(it.replace(" ", "")) }
-        val containsIgnore = ignoreKeywords.any { line.contains(it) || normalizedLine.contains(it.replace(" ", "")) }
+        val containsTotal = totalKeywords.any { cleanLine.contains(it) || normalizedLine.contains(it.replace(" ", "")) }
+        // Ignore keywords only if they appear WITHOUT the word "TOTAL" (to allow "TOTAL CARD")
+        val containsIgnore = ignoreKeywords.any {
+            (cleanLine.contains(it) || normalizedLine.contains(it.replace(" ", ""))) && !containsTotal
+        }
 
         if (containsTotal && !containsIgnore) {
             var matches = priceRegex.findAll(line).toList()
@@ -755,11 +800,12 @@ private fun extractDataFromText(
         val validNumbers = mutableListOf<Double>()
 
         for (line in lines) {
-            val normalizedLine = line.replace(" ", "").replace("0", "Ο")
-            val containsIgnore = ignoreKeywords.any { line.contains(it) || normalizedLine.contains(it.replace(" ", "")) }
+            val cleanLine = stripGreekAccents(line)
+            val normalizedLine = cleanLine.replace(" ", "").replace("0", "Ο")
+            val containsIgnore = ignoreKeywords.any { cleanLine.contains(it) || normalizedLine.contains(it.replace(" ", "")) }
 
             // Exclude lines with explicit percentages or item multipliers
-            if (containsIgnore || line.contains("X") || line.contains("Χ") || line.contains("%")) continue
+            if (containsIgnore || cleanLine.contains("X") || cleanLine.contains("Χ") || cleanLine.contains("%")) continue
 
             val matches = priceRegex.findAll(line)
             for (match in matches) {
