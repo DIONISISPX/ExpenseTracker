@@ -117,7 +117,7 @@ fun ManualExpenseForm(
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Button(
             modifier = Modifier.fillMaxWidth().height(56.dp),

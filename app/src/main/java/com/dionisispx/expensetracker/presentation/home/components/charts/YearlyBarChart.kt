@@ -16,16 +16,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dionisispx.expensetracker.R
 
 @Composable
-fun YearlyBarChart(monthlyTotals: FloatArray) {
-    val maxAmount = monthlyTotals.maxOrNull() ?: 1f
-    val safeMax = if (maxAmount == 0f) 1f else maxAmount
+fun YearlyBarChart(
+    monthlyTotals: FloatArray,
+    showRemaining: Boolean = false,
+    totalBudget: Float = 0f
+) {
+    val maxSpent = monthlyTotals.maxOrNull() ?: 0f
+    val maxScale = maxOf(maxSpent, totalBudget * 1.15f).let { if (it == 0f) 1f else it }
+    
     val monthNames = stringArrayResource(R.array.months_short)
 
     Row(
@@ -36,8 +40,16 @@ fun YearlyBarChart(monthlyTotals: FloatArray) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.Bottom
     ) {
-        monthlyTotals.forEachIndexed { index, amount ->
-            val heightFraction = amount / safeMax
+        monthlyTotals.forEachIndexed { index, spentAmount ->
+            val isOverBudget = spentAmount > totalBudget
+            
+            // Calculate height fraction based on mode
+            val displayAmount = if (showRemaining) {
+                (totalBudget - spentAmount).coerceAtLeast(0f)
+            } else {
+                spentAmount
+            }
+            val heightFraction = displayAmount / maxScale
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -47,15 +59,30 @@ fun YearlyBarChart(monthlyTotals: FloatArray) {
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     contentAlignment = Alignment.BottomCenter
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.7f)
-                            .fillMaxHeight(heightFraction)
-                            .background(
-                                color = if (amount > 0f) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                            )
-                    )
+                    if (isOverBudget && showRemaining) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.7f)
+                                .fillMaxHeight(0.01f)
+                                .background(
+                                    color = MaterialTheme.colorScheme.error,
+                                    shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                                )
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.7f)
+                                .fillMaxHeight(heightFraction.coerceAtLeast(0.01f))
+                                .background(
+                                    color = when {
+                                        isOverBudget -> MaterialTheme.colorScheme.error
+                                        else -> MaterialTheme.colorScheme.primary
+                                    },
+                                    shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                                )
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(

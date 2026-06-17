@@ -40,10 +40,14 @@ class SharedViewModel @Inject constructor(
     private val _yearlyExpenses = MutableStateFlow<List<Expense>>(emptyList())
     val yearlyExpenses: StateFlow<List<Expense>> = _yearlyExpenses.asStateFlow()
 
+    // State to toggle between spent and remaining views
+    private val _showRemaining = MutableStateFlow(false)
+    val showRemaining: StateFlow<Boolean> = _showRemaining.asStateFlow()
+
     val monthlyTotals: StateFlow<FloatArray> = _yearlyExpenses.map { expenses ->
         val totals = FloatArray(12)
         expenses.forEach { expense ->
-            val date = java.time.Instant.ofEpochMilli(expense.date).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+            val date = java.time.Instant.ofEpochMilli(expense.date).atZone(ZoneId.systemDefault()).toLocalDate()
             val monthIndex = date.monthValue - 1
             totals[monthIndex] += expense.amount.toFloat()
         }
@@ -212,5 +216,9 @@ class SharedViewModel @Inject constructor(
         viewModelScope.launch {
             prefsRepository.saveLanguagePreference(language)
         }
+    }
+
+    fun toggleShowRemaining() {
+        _showRemaining.value = !_showRemaining.value
     }
 }

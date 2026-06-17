@@ -30,7 +30,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -59,9 +58,9 @@ fun HomeScreen(
     val totalBudget by viewModel.totalBudget.collectAsState()
     val categoryLimits by viewModel.categoryLimits.collectAsState()
     val currencyPreference by viewModel.currencyPreference.collectAsState()
+    val showRemaining by viewModel.showRemaining.collectAsState()
 
     // Setup interactive states
-    var showRemaining by remember { mutableStateOf(false) }
     var selectedMainTab by remember { mutableIntStateOf(0) }
     var selectedSubTab by remember { mutableIntStateOf(0) }
 
@@ -91,7 +90,7 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text(text = stringResource(R.string.app_name), fontWeight = FontWeight.Bold) },
                 actions = {
-                    IconButton(onClick = { showRemaining = !showRemaining }) {
+                    IconButton(onClick = { viewModel.toggleShowRemaining() }) {
                         Icon(
                             imageVector = Icons.Default.SwapHoriz,
                             contentDescription = "Toggle budget view",
@@ -169,6 +168,8 @@ fun HomeScreen(
                     currentYear = currentYear,
                     currencyPreference = currencyPreference,
                     isLandscape = isLandscape,
+                    showRemaining = showRemaining,
+                    totalBudget = totalBudget.toFloat(),
                     viewModel = viewModel,
                     modifier = Modifier.weight(1f).fillMaxWidth()
                 )

@@ -20,6 +20,8 @@ fun HistoryBreakdown(
     currentYear: Int,
     currencyPreference: String,
     isLandscape: Boolean,
+    showRemaining: Boolean,
+    totalBudget: Float,
     viewModel: SharedViewModel,
     modifier: Modifier = Modifier
 ) {
@@ -31,22 +33,50 @@ fun HistoryBreakdown(
                     modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    YearlyBarChart(monthlyTotals = monthlyTotals)
-                    YearlyTotalCard(yearlyExpenses, currencyPreference)
+                    YearlyBarChart(
+                        monthlyTotals = monthlyTotals,
+                        showRemaining = showRemaining,
+                        totalBudget = totalBudget
+                    )
+                    YearlyTotalCard(
+                        yearlyExpenses = yearlyExpenses,
+                        showRemaining = showRemaining,
+                        totalBudget = totalBudget,
+                        currencyPreference = currencyPreference
+                    )
                 }
                 Column(
                     modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())
                 ) {
-                    MonthlyBreakdownList(monthlyTotals, currencyPreference)
+                    MonthlyBreakdownList(
+                        monthlyTotals = monthlyTotals,
+                        showRemaining = showRemaining,
+                        totalBudget = totalBudget,
+                        currencyPreference = currencyPreference
+                    )
                 }
             }
         }
     } else {
         Column(modifier = modifier.verticalScroll(rememberScrollState())) {
             HistoryHeader(currentYear, viewModel)
-            YearlyBarChart(monthlyTotals = monthlyTotals)
-            YearlyTotalCard(yearlyExpenses, currencyPreference)
-            MonthlyBreakdownList(monthlyTotals, currencyPreference)
+            YearlyBarChart(
+                monthlyTotals = monthlyTotals,
+                showRemaining = showRemaining,
+                totalBudget = totalBudget
+            )
+            YearlyTotalCard(
+                yearlyExpenses = yearlyExpenses,
+                showRemaining = showRemaining,
+                totalBudget = totalBudget,
+                currencyPreference = currencyPreference
+            )
+            MonthlyBreakdownList(
+                monthlyTotals = monthlyTotals,
+                showRemaining = showRemaining,
+                totalBudget = totalBudget,
+                currencyPreference = currencyPreference
+            )
         }
     }
 }

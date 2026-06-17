@@ -20,7 +20,12 @@ import com.dionisispx.expensetracker.R
 import java.util.Locale
 
 @Composable
-fun MonthlyBreakdownList(monthlyTotals: FloatArray, currencyPreference: String) {
+fun MonthlyBreakdownList(
+    monthlyTotals: FloatArray,
+    showRemaining: Boolean = false,
+    totalBudget: Float = 0f,
+    currencyPreference: String
+) {
     Text(
         text = stringResource(R.string.monthly_breakdown),
         fontWeight = FontWeight.Bold,
@@ -35,17 +40,28 @@ fun MonthlyBreakdownList(monthlyTotals: FloatArray, currencyPreference: String) 
         Column(modifier = Modifier.padding(16.dp)) {
             val fullMonths = stringArrayResource(R.array.months_full)
 
-            monthlyTotals.forEachIndexed { index, total ->
-                val formattedTotal = String.format(Locale.US, "%.2f", total)
+            monthlyTotals.forEachIndexed { index, totalSpent ->
+                val isOverBudget = showRemaining && totalSpent > totalBudget
+                val displayAmount = if (showRemaining) {
+                    if (isOverBudget) totalSpent - totalBudget else totalBudget - totalSpent
+                } else {
+                    totalSpent
+                }
+                
+                val formattedAmount = String.format(Locale.US, "%.2f", displayAmount)
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(fullMonths[index])
                     Text(
-                        text = if (currencyPreference == "$") "$$formattedTotal" else "$formattedTotal $currencyPreference",
-                        fontWeight = if (total > 0f) FontWeight.Bold else FontWeight.Normal,
-                        color = if (total > 0f) MaterialTheme.colorScheme.primary else Color.Gray
+                        text = if (currencyPreference == "$") "$$formattedAmount" else "$formattedAmount $currencyPreference",
+                        fontWeight = if (totalSpent > 0f) FontWeight.Bold else FontWeight.Normal,
+                        color = when {
+                            isOverBudget -> MaterialTheme.colorScheme.error
+                            totalSpent > 0f -> MaterialTheme.colorScheme.primary
+                            else -> Color.Gray
+                        }
                     )
                 }
             }

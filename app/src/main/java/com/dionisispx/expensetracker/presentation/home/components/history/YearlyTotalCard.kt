@@ -18,23 +18,47 @@ import com.dionisispx.expensetracker.domain.model.Expense
 import java.util.Locale
 
 @Composable
-fun YearlyTotalCard(yearlyExpenses: List<Expense>, currencyPreference: String) {
-    val yearlyTotal = yearlyExpenses.sumOf { it.amount }
-    val formattedYearlyTotal = String.format(Locale.US, "%.2f", yearlyTotal)
+fun YearlyTotalCard(
+    yearlyExpenses: List<Expense>,
+    showRemaining: Boolean = false,
+    totalBudget: Float = 0f,
+    currencyPreference: String
+) {
+    val yearlySpent = yearlyExpenses.sumOf { it.amount }.toFloat()
+    val yearlyBudget = totalBudget * 12
+    val isOverBudget = showRemaining && yearlySpent > yearlyBudget
+
+    val displayAmount = if (showRemaining) {
+        if (isOverBudget) yearlySpent - yearlyBudget else yearlyBudget - yearlySpent
+    } else {
+        yearlySpent
+    }
+
+    val formattedAmount = String.format(Locale.US, "%.2f", displayAmount)
 
     Card(
         modifier = Modifier.fillMaxWidth().padding(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(
+            containerColor = if (isOverBudget) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
         Row(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(stringResource(R.string.yearly_total), fontWeight = FontWeight.Bold)
             Text(
-                text = if (currencyPreference == "$") "$$formattedYearlyTotal" else "$formattedYearlyTotal $currencyPreference",
+                text = if (showRemaining) {
+                    if (isOverBudget) stringResource(R.string.over_budget) else stringResource(R.string.remaining)
+                } else {
+                    stringResource(R.string.yearly_total)
+                },
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = if (isOverBudget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = if (currencyPreference == "$") "$$formattedAmount" else "$formattedAmount $currencyPreference",
+                fontWeight = FontWeight.Bold,
+                color = if (isOverBudget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
             )
         }
     }

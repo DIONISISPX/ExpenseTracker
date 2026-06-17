@@ -1,26 +1,64 @@
 package com.dionisispx.expensetracker.domain.usecase
 
 import com.dionisispx.expensetracker.domain.model.ReceiptData
+import java.util.Locale
 import javax.inject.Inject
-import kotlin.math.roundToInt
+import kotlin.math.abs
 
 class AnalyzeReceiptUseCase @Inject constructor() {
 
+    // Bare price pattern bounded by non-digit context
+    private val priceRegex = Regex("(?<!\\d)\\d+\\s*[.,]\\s*\\d{2}(?!\\d)")
+
+    // Euro-prefixed price for higher confidence matches
+    private val euroPriceRegex = Regex("€\\s*(\\d+\\s*[.,]\\s*\\d{2})(?!\\d)")
+
+    // OCR-tolerant pattern for Greek total allowing common letter swaps
+    private val greekTotalRegex = Regex("[ΣS][ΥYU][ΝN][ΟO0][ΛL][ΟO0]")
+
+    // OCR-tolerant pattern for Greek subtotal prefix
+    private val greekSubtotalRegex = Regex("[ΜM][ΕE][ΡRP][ΙI][ΚK][ΟO0]")
+
+    // Latin total keyword bounded by word edges
+    private val totalLatinRegex = Regex("\\bTOTAL\\b")
+
+    // Latin subtotal variants
+    private val subtotalLatinRegex = Regex("\\b(SUBTOTAL|SUB\\s*TOTAL)\\b")
+
+    // Greek payable amount keyword
+    private val payableRegex = Regex("ΠΛΗΡΩΤ[ΕE][ΟO0]")
+
+    // Payment method lines should never be treated as totals
+    private val paymentKeywords = listOf(
+        "ΜΕΤΡΗΤΑ", "ΚΑΡΤΑ", "ΠΙΣΤΩΤΙΚΗ", "ΠΛΗΡΩΜΗ",
+        "ΡΕΣΤΑ", "CHANGE", "CARD", "CASH", "VISA", "MASTERCARD"
+    )
+
+    // Metadata lines that carry non-price numbers
+    private val metadataKeywords = listOf(
+        "ΤΗΛ", "ΑΦΜ", "ΔΟΥ", "ΠΟΣΟΤΗΤΑ", "QTY", "QUANTITY"
+    )
+
+    // Noise patterns: dates, order numbers, phone numbers, timestamps
+    private val noisePatterns = listOf(
+        Regex("#\\d{3,}"),
+        Regex("\\d{2}[/.]\\d{2}[/.]\\d{2,4}"),
+        Regex("\\d{10,}"),
+        Regex("\\d{2}:\\d{2}")
+    )
+
     operator fun invoke(text: String, userDictionary: Map<String, String>): ReceiptData {
         var finalStore = ""
-        var finalAmount = ""
+        var finalAmount: String
         var finalCategory = "Other"
 
         val upperText = text.uppercase()
 
-        // Strip quotes, brackets, and replace dots/commas with spaces for clean word boundary checks
+        // Clean text for store name matching by removing punctuation
         val cleanTextForNames = upperText
-            .replace("\"", "")
-            .replace("'", "")
-            .replace("«", "")
-            .replace("»", "")
-            .replace(".", " ")
-            .replace(",", " ")
+            .replace("\"", "").replace("'", "")
+            .replace("«", "").replace("»", "")
+            .replace(".", " ").replace(",", " ")
 
         val companySuffixes = setOf(
             "ΙΚΕ", "IKE", "ΑΕ", "AE", "ΕΠΕ", "EPE", "ΟΕ", "OE", "ΕΕ", "EE",
@@ -35,7 +73,6 @@ class AnalyzeReceiptUseCase @Inject constructor() {
                 normalizedWord !in companySuffixes
             }
 
-        // Seed dictionary
         val seedDictionary = mapOf(
             "ΣΚΛΑΒΕΝΙΤΗΣ" to "Groceries",
             "ΓΑΛΑΞΙΑΣ" to "Groceries",
@@ -61,7 +98,7 @@ class AnalyzeReceiptUseCase @Inject constructor() {
             "OPTIONS" to "Entertainment",
 
             "Ο.Α.Σ.Α." to "Transport & Fuel",
-            "ΣΤΑΣΥ" to "Transport & Fuel",
+            "ΣΤΑ.ΣΥ." to "Transport & Fuel",
             "EKO" to "Transport & Fuel",
             "BP" to "Transport & Fuel",
             "SHELL" to "Transport & Fuel",
@@ -86,6 +123,9 @@ class AnalyzeReceiptUseCase @Inject constructor() {
             "BREAD FACTORY" to "Food & Drink",
             "ΣΤΕΡΓΙΟΥ" to "Food & Drink",
             "NANOU" to "Food & Drink",
+            "EFOOD" to "Food & Drink",
+            "WOLT" to "Food & Drink",
+            "BOX" to "Food & Drink",
 
             "YAVA" to "Health & Fitness",
             "PLANET FITNESS" to "Health & Fitness",
@@ -100,33 +140,25 @@ class AnalyzeReceiptUseCase @Inject constructor() {
             "ΕΥΔΑΠ" to "Bills & Utilities"
         )
 
-        // Combine dictionaries
         val combinedDictionary = seedDictionary + userDictionary
 
-        // Store extraction using multi-word phrase matching
+        // Build n-gram phrases for fuzzy store name matching
         var bestMatchScore = 0.0
-
         val phrases = mutableListOf<String>()
         for (i in words.indices) {
             phrases.add(words[i])
-            if (i < words.size - 1) phrases.add("${words[i]} ${words[i+1]}")
-            if (i < words.size - 2) phrases.add("${words[i]} ${words[i+1]} ${words[i+2]}")
-            if (i < words.size - 3) phrases.add("${words[i]} ${words[i+1]} ${words[i+2]} ${words[i+3]}")
+            if (i < words.size - 1) phrases.add("${words[i]} ${words[i + 1]}")
+            if (i < words.size - 2) phrases.add("${words[i]} ${words[i + 1]} ${words[i + 2]}")
+            if (i < words.size - 3) phrases.add("${words[i]} ${words[i + 1]} ${words[i + 2]} ${words[i + 3]}")
         }
 
         for (phrase in phrases) {
             if (phrase.length < 3) continue
-
             for ((store, category) in combinedDictionary) {
-
                 val normalizedPhrase = normalizeForFuzzy(phrase)
                 val normalizedStore = normalizeForFuzzy(store)
-
-                // Check if exact match otherwise calculate fuzzy score
                 val isExactMatch = normalizedPhrase.replace(" ", "") == normalizedStore.replace(" ", "")
                 val score = if (isExactMatch) 1.0 else similarity(normalizedPhrase, normalizedStore)
-
-                // Only update if new score is higher than best score
                 if (score > 0.70 && score > bestMatchScore) {
                     bestMatchScore = score
                     finalStore = store
@@ -135,111 +167,154 @@ class AnalyzeReceiptUseCase @Inject constructor() {
             }
         }
 
-        // Smart amount extraction
-        val lines = upperText.lines().map { it.trim() }.filter { it.isNotEmpty() }
-
-        // Negative lookbehinds and lookaheads ensure we do not match glued digits
-        val priceRegex = Regex("(?<!\\d)\\d+[.,]\\d{2}(?!\\d)")
-
-        val totalKeywords = listOf(
-            "ΣΥΝΟΛΟ", "ΤΕΛΙΚΟ ΣΥΝΟΛΟ", "ΜΕΡΙΚΟ ΣΥΝΟΛΟ", "ΣΥΝΟΛΟ €", "TOTAL"
-        )
-
-        val ignoreKeywords = listOf(
-            "ΜΕΤΡΗΤΑ", "ΚΑΡΤΑ", "ΠΙΣΤΩΤΙΚΗ ΚΑΡΤΑ", "ΠΛΗΡΩΜΗ ΜΕ ΚΑΡΤΑ",
-            "ΑΜΕΣΗ ΚΑΡΤΑ", "ΚΑΡΤΑ-1", "Π. ΚΑΡΤΑ", "ΠΙΣΤ. ΚΑΡΤΑ",
-            "ΡΕΣΤΑ", "CHANGE", "ΤΗΛ", "ΑΦΜ", "ΔΟΥ", "CARD",
-            "ΠΟΣΟΤΗΤΑ", "ΠΟΣΟΤΗΤΑΣ", "ΠΟΣΟΤ.", "QTY", "QUANTITY"
-        )
-
-        for (i in lines.indices) {
-            val line = lines[i]
-
-            val cleanLine = stripGreekAccents(line)
-            val normalizedLine = cleanLine.replace(" ", "").replace("0", "Ο").replace("1", "Ι")
-
-            val containsTotal = totalKeywords.any { cleanLine.contains(it) || normalizedLine.contains(it.replace(" ", "")) }
-            // Ignore keywords only if they appear WITHOUT the word "TOTAL" (fix for "TOTAL CARD")
-            val containsIgnore = ignoreKeywords.any {
-                (cleanLine.contains(it) || normalizedLine.contains(it.replace(" ", ""))) && !containsTotal
-            }
-
-            if (containsTotal && !containsIgnore) {
-                var matches = priceRegex.findAll(line).toList()
-
-                if (matches.isEmpty() && i + 1 < lines.size) {
-                    matches = priceRegex.findAll(lines[i + 1]).toList()
-                }
-
-                if (matches.isNotEmpty()) {
-                    finalAmount = matches.last().value.replace(",", ".").replace("-", ".")
-                    break
-                }
-            }
-        }
-
-        // Safe fallback using mathematical triangulation
-        if (finalAmount.isEmpty()) {
-            val validNumbers = mutableListOf<Double>()
-
-            for (line in lines) {
-                val cleanLine = stripGreekAccents(line)
-                val normalizedLine = cleanLine.replace(" ", "").replace("0", "Ο")
-                val containsIgnore = ignoreKeywords.any { cleanLine.contains(it) || normalizedLine.contains(it.replace(" ", "")) }
-
-                // Exclude lines with explicit percentages or item multipliers
-                if (containsIgnore || cleanLine.contains("X") || cleanLine.contains("Χ") || cleanLine.contains("%")) continue
-
-                val matches = priceRegex.findAll(line)
-                for (match in matches) {
-                    val normalizedStr = match.value.replace(",", ".").replace("-", ".")
-                    val num = normalizedStr.toDoubleOrNull() ?: 0.0
-
-                    // Hard exclude greek VAT rates and zero
-                    if (num != 13.00 && num != 24.00 && num != 6.00 && num != 0.0) {
-                        validNumbers.add(num)
-                    }
-                }
-            }
-
-            if (validNumbers.isNotEmpty()) {
-                // Analyze the last 4 numbers as they usually contain the total block
-                val tail = validNumbers.takeLast(4)
-                var foundByMath = false
-
-                // Scenario A: Card payment where amount appears twice
-                for (i in 0 until tail.size - 1) {
-                    if (tail[i] == tail[i+1]) {
-                        finalAmount = String.format(java.util.Locale.US, "%.2f", tail[i])
-                        foundByMath = true
+        if (finalStore.isEmpty()) {
+            val ignoreTokens = listOf("ΑΠΟΔΕΙΞΗ", "ΕΙΔΙΚΟ", "ΦΟΡΟΛΟΓΙΚΟ", "ΔΕΛΤΙΟ", "ΕΝΑΡΞΗ", "ΛΗΞΗ", "ΝΟΜΙΜΗ", "ΠΩΛΗΣΗΣ", "ΛΙΑΝΙΚΗΣ", "ΕΚΔΟΣΗΣ")
+            for (line in upperText.lines().map { it.trim() }) {
+                if (line.length >= 3 && line.any { it.isLetter() }) {
+                    val stripped = stripGreekAccents(line)
+                    if (ignoreTokens.none { stripped.contains(it) }) {
+                        finalStore = line
                         break
                     }
                 }
-
-                // Scenario B: Cash payment where total plus change is cash given
-                if (!foundByMath && tail.size >= 3) {
-                    val a = tail[tail.size - 3]
-                    val b = tail[tail.size - 2]
-                    val c = tail[tail.size - 1]
-
-                    // Floating point math check to avoid rounding errors
-                    val sumAC = ((a + c) * 100).roundToInt() / 100.0
-
-                    if (sumAC == b) {
-                        finalAmount = String.format(java.util.Locale.US, "%.2f", a)
-                        foundByMath = true
-                    }
-                }
-
-                // Scenario C: Fallback to max number
-                if (!foundByMath) {
-                    val maxNum = validNumbers.maxOrNull() ?: 0.0
-                    finalAmount = String.format(java.util.Locale.US, "%.2f", maxNum)
-                }
             }
         }
 
+        finalAmount = extractTotal(upperText)
+
         return ReceiptData(finalStore, finalAmount, finalCategory)
+    }
+
+    // Runs keyword scan then falls back to structural heuristics
+    private fun extractTotal(upperText: String): String {
+        val lines = upperText.lines().map { it.trim() }.filter { it.isNotEmpty() }
+        if (lines.isEmpty()) return ""
+
+        val totalPrices = mutableListOf<Double>()
+        val subtotalPrices = mutableListOf<Double>()
+
+        for (i in lines.indices) {
+            val stripped = stripGreekAccents(lines[i])
+            if (paymentKeywords.any { stripped.contains(it) }) continue
+
+            val hasTotalWord = greekTotalRegex.containsMatchIn(stripped)
+                    || totalLatinRegex.containsMatchIn(stripped)
+                    || payableRegex.containsMatchIn(stripped)
+            val hasSubtotalPrefix = greekSubtotalRegex.containsMatchIn(stripped)
+                    || subtotalLatinRegex.containsMatchIn(stripped)
+
+            if (hasTotalWord && !hasSubtotalPrefix) {
+                totalPrices.addAll(findPricesNear(lines, i))
+            } else if (hasTotalWord) {
+                subtotalPrices.addAll(findPricesNear(lines, i))
+            }
+        }
+
+        if (totalPrices.isNotEmpty()) {
+            return formatPrice(totalPrices.maxOrNull()!!)
+        }
+        if (subtotalPrices.isNotEmpty()) {
+            return formatPrice(subtotalPrices.maxOrNull()!!)
+        }
+
+        return structuralFallback(lines)
+    }
+
+    // Extracts all prices near a given line index
+    private fun findPricesNear(lines: List<String>, targetIndex: Int): List<Double> {
+        val found = mutableListOf<Double>()
+        // Labels usually precede their values or are on the same line.
+        // We only check the current line and the next two lines.
+        val offsets = listOf(0, 1, 2)
+        for (offset in offsets) {
+            val idx = targetIndex + offset
+            if (idx !in lines.indices) continue
+            val line = lines[idx]
+
+            // Only validate adjacent lines against payment and metadata keywords
+            if (offset != 0) {
+                val stripped = stripGreekAccents(line)
+                if (paymentKeywords.any { stripped.contains(it) }) continue
+                if (metadataKeywords.any { stripped.contains(it) }) continue
+            }
+
+            // Extract all possible prices
+            euroPriceRegex.findAll(line).forEach {
+                it.groupValues[1].replace(" ", "").replace(",", ".").toDoubleOrNull()?.let { num -> found.add(num) }
+            }
+            priceRegex.findAll(line).forEach {
+                it.value.replace(" ", "").replace(",", ".").toDoubleOrNull()?.let { num -> found.add(num) }
+            }
+        }
+        return found
+    }
+
+    // Fallback when no keywords are found, using position and duplicate heuristics
+    private fun structuralFallback(lines: List<String>): String {
+        data class PriceEntry(val amount: Double, val lineIndex: Int)
+
+        val prices = mutableListOf<PriceEntry>()
+
+        for (i in lines.indices) {
+            val line = lines[i]
+            val stripped = stripGreekAccents(line)
+            if (paymentKeywords.any { stripped.contains(it) }) continue
+            if (metadataKeywords.any { stripped.contains(it) }) continue
+            if (noisePatterns.any { it.containsMatchIn(line) }) continue
+
+            for (match in priceRegex.findAll(line)) {
+                val num = match.value.replace(" ", "").replace(",", ".").toDoubleOrNull() ?: continue
+                if (num <= 0.0 || isVatRate(num)) continue
+                prices.add(PriceEntry(num, i))
+            }
+        }
+
+        if (prices.isEmpty()) return ""
+
+        val bottomHalfStart = lines.size / 2
+        val bottomPrices = prices.filter { it.lineIndex >= bottomHalfStart }
+
+        // Duplicate in bottom half usually means subtotal echoed as total
+        val duplicateGroup = bottomPrices
+            .groupBy { roundCents(it.amount) }
+            .filter { it.value.size >= 2 }
+            .maxByOrNull { it.key }
+
+        if (duplicateGroup != null) {
+            return formatPrice(duplicateGroup.key)
+        }
+
+        // Cash payment pattern: total + change = cash tendered
+        for (j in 0..prices.size - 3) {
+            val a = prices[j].amount
+            val b = prices[j+1].amount
+            val c = prices[j+2].amount
+            if (doublesEqual(a + c, b) && b >= a) {
+                return formatPrice(a)
+            }
+        }
+
+        // Largest value in the bottom half, or overall largest as last resort
+        val best = (bottomPrices.ifEmpty { prices }).maxByOrNull { it.amount }
+        return if (best != null) formatPrice(best.amount) else ""
+    }
+
+    // Returns true for common Greek VAT rate values
+    private fun isVatRate(num: Double): Boolean {
+        return doublesEqual(num, 6.0) || doublesEqual(num, 13.0) || doublesEqual(num, 24.0)
+    }
+
+    // Compares doubles with cent-level tolerance to avoid floating point drift
+    private fun doublesEqual(a: Double, b: Double): Boolean {
+        return abs(a - b) < 0.005
+    }
+
+    private fun roundCents(value: Double): Double {
+        return Math.round(value * 100) / 100.0
+    }
+
+    private fun formatPrice(value: Double): String {
+        return String.format(Locale.US, "%.2f", value)
     }
 
     private fun similarity(s1: String, s2: String): Double {
@@ -278,36 +353,24 @@ class AnalyzeReceiptUseCase @Inject constructor() {
 
     private fun stripGreekAccents(input: String): String {
         return input
-            .replace("Ά", "Α")
-            .replace("Έ", "Ε")
-            .replace("Ή", "Η")
-            .replace("Ί", "Ι")
-            .replace("Ό", "Ο")
-            .replace("Ύ", "Υ")
-            .replace("Ώ", "Ω")
-            .replace("Ϊ", "Ι")
-            .replace("Ϋ", "Υ")
+            .replace("Ά", "Α").replace("Έ", "Ε").replace("Ή", "Η")
+            .replace("Ί", "Ι").replace("Ό", "Ο").replace("Ύ", "Υ")
+            .replace("Ώ", "Ω").replace("Ϊ", "Ι").replace("Ϋ", "Υ")
+            .replace("ά", "α").replace("έ", "ε").replace("ή", "η")
+            .replace("ί", "ι").replace("ό", "ο").replace("ύ", "υ")
+            .replace("ώ", "ω").replace("ϊ", "ι").replace("ϋ", "υ")
+            .replace("ΐ", "ι").replace("ΰ", "υ")
     }
 
     private fun normalizeForFuzzy(input: String): String {
         return stripGreekAccents(input.uppercase())
-            .replace("V", "Ψ")
-            .replace("S", "Σ")
-            .replace("C", "Σ")
-            .replace("E", "Ε")
-            .replace("N", "Ν")
-            .replace("I", "Ι")
-            .replace("O", "Ο")
-            .replace("P", "Ρ")
-            .replace("A", "Α")
-            .replace("T", "Τ")
-            .replace("H", "Η")
-            .replace("K", "Κ")
-            .replace("M", "Μ")
-            .replace("X", "Χ")
-            .replace("Y", "Υ")
-            .replace("Z", "Ζ")
-            .replace("B", "Β")
-            .replace("U", "Υ")
+            .replace(".", "").replace(",", "").replace("-", "")
+            .replace("V", "Ψ").replace("S", "Σ").replace("C", "Σ")
+            .replace("E", "Ε").replace("N", "Ν").replace("I", "Ι")
+            .replace("O", "Ο").replace("P", "Ρ").replace("A", "Α")
+            .replace("T", "Τ").replace("H", "Η").replace("K", "Κ")
+            .replace("M", "Μ").replace("X", "Χ").replace("Y", "Υ")
+            .replace("Z", "Ζ").replace("B", "Β").replace("U", "Υ")
     }
 }
+

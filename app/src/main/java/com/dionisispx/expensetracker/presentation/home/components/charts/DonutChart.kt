@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.domain.model.Expense
@@ -84,8 +85,9 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
 
                 Text(
                     text = if (isOver) stringResource(R.string.over_budget) else stringResource(R.string.remaining),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = if (isOver) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (isOver) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
                 )
                 Text(
                     text = if (currencySymbol == "$") "$$formattedValue" else "$formattedValue $currencySymbol",
