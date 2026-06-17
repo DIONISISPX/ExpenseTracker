@@ -79,19 +79,6 @@ class SharedViewModel @Inject constructor(
         viewModelScope, SharingStarted.WhileSubscribed(5000), "el"
     )
 
-    // Auto learning dictionary builds a map from all database expenses
-    val userDictionary: StateFlow<Map<String, String>> = repository.getAllExpenses()
-        .map { allExpenses ->
-            val dict = mutableMapOf<String, String>()
-            // Sort by date (oldest first) to ensure the newest category overwrites the old one
-            allExpenses.sortedBy { it.date }.forEach { expense ->
-                // Uppercase to match the OCR output format perfectly
-                dict[expense.storeName.uppercase()] = expense.category
-            }
-            dict
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
-
     // Keeps track of the active database queries
     private var currentMonthJob: Job? = null
     private var currentYearJob: Job? = null
