@@ -40,7 +40,7 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
                 startAngle = 0f,
                 sweepAngle = 360f,
                 useCenter = false,
-                style = Stroke(width = 50f, cap = StrokeCap.Round)
+                style = Stroke(width = 50f, cap = StrokeCap.Butt)
             )
 
             if (expenses.isNotEmpty() && totalSpent > 0f) {
@@ -54,7 +54,7 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
                         startAngle = -90f,
                         sweepAngle = 360f,
                         useCenter = false,
-                        style = Stroke(width = 50f, cap = StrokeCap.Round)
+                        style = Stroke(width = 50f, cap = StrokeCap.Butt)
                     )
                 } else {
                     groupedExpenses.entries.forEach { entry ->
@@ -67,7 +67,7 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
                             startAngle = currentStartAngle,
                             sweepAngle = sweepAngle,
                             useCenter = false,
-                            style = Stroke(width = 50f, cap = StrokeCap.Round)
+                            style = Stroke(width = 50f, cap = StrokeCap.Butt)
                         )
                         currentStartAngle += sweepAngle
                     }

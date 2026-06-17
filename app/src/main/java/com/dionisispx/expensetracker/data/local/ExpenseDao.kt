@@ -32,6 +32,7 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses_table WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
     fun getExpensesByDateRange(startDate: Long, endDate: Long): Flow<List<ExpenseEntity>>
 
+    // Delete all expenses
     @Query("DELETE FROM expenses_table")
     suspend fun deleteAllExpenses()
 }

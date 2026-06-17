@@ -50,9 +50,9 @@ class SharedViewModel @Inject constructor(
         totals
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FloatArray(12) { 0f })
 
-    // Read real budget limits from data store
-    val totalBudget: StateFlow<Float> = prefsRepository.totalBudget.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(5000), 1000f
+    // Read budget limits from data store
+    val totalBudget: StateFlow<Int> = prefsRepository.totalBudget.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), 1000
     )
 
     // Read category limits from data store
@@ -70,6 +70,7 @@ class SharedViewModel @Inject constructor(
         viewModelScope, SharingStarted.WhileSubscribed(5000), "€"
     )
 
+    // Read language preference from data store
     val languagePreference: StateFlow<String> = prefsRepository.languagePreference.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), "el"
     )
@@ -78,7 +79,7 @@ class SharedViewModel @Inject constructor(
     val userDictionary: StateFlow<Map<String, String>> = repository.getAllExpenses()
         .map { allExpenses ->
             val dict = mutableMapOf<String, String>()
-            // Sort by date (oldest first) to ensure newest category overwrites the old one
+            // Sort by date (oldest first) to ensure the newest category overwrites the old one
             allExpenses.sortedBy { it.date }.forEach { expense ->
                 // Uppercase to match the OCR output format perfectly
                 dict[expense.storeName.uppercase()] = expense.category
@@ -170,7 +171,7 @@ class SharedViewModel @Inject constructor(
     }
 
     // Save new limits to data store
-    fun saveBudgetAndLimits(budget: Float, limits: Map<String, Float>) {
+    fun saveBudgetAndLimits(budget: Int, limits: Map<String, Float>) {
         viewModelScope.launch {
             prefsRepository.saveTotalBudget(budget)
             prefsRepository.saveCategoryLimits(limits)
@@ -197,7 +198,7 @@ class SharedViewModel @Inject constructor(
             // Wipes the database
             repository.deleteAllExpenses()
             // Resets the budget and limits back to default
-            prefsRepository.saveTotalBudget(1000f)
+            prefsRepository.saveTotalBudget(1000)
             prefsRepository.saveCategoryLimits(emptyMap())
         }
     }

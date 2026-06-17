@@ -9,13 +9,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 sealed class Screen(val route: String, val title: String, val icon: ImageVector?) {
 
     // Home screen
-    object Home : Screen("home", "Home", Icons.Default.Home)
+    object Home : Screen("home", "Home/Κεντρική", Icons.Default.Home)
 
     // Scanner or manual add screen. No icon (FAB)
     object AddExpense : Screen("add_expense", "Add", null)
 
     // Settings screen
-    object Settings : Screen("settings", "Settings", Icons.Default.Settings)
+    object Settings : Screen("settings", "Settings/Ρυθμίσεις", Icons.Default.Settings)
 
     // Budget settings screen
     object BudgetSettings : Screen("budget_settings", "Budget Settings", null)

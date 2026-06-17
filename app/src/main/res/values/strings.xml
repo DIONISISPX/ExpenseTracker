@@ -9,7 +9,7 @@
     <string name="reset">Επαναφορά</string>
     <string name="optional">(προαιρετικά)</string>
 
-    <string name="tab_home">Αρχική</string>
+    <string name="tab_home">Κεντρική</string>
     <string name="tab_settings">Ρυθμίσεις</string>
     <string name="add_expense">Προσθήκη Εξόδου</string>
 
@@ -19,7 +19,7 @@
     <string name="tab_limits">Όρια</string>
     <string name="yearly_total">Σύνολο Έτους:</string>
     <string name="monthly_breakdown">Ανάλυση ανά μήνα:</string>
-    <string name="spent">Ξοδεύτηκαν</string>
+    <string name="spent">Έξοδα</string>
     <string name="remaining">Υπόλοιπο</string>
     <string name="over_budget">Εκτός Προϋπολογισμού</string>
     <string name="total_spent">Συνολικά Έξοδα</string>

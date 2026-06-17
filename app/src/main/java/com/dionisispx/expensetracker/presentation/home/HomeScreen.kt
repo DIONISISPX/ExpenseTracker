@@ -5,10 +5,12 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -96,9 +98,11 @@ fun HomeScreen(
                             tint = if (showRemaining) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         )
                     }
-                }
+                },
+                windowInsets = WindowInsets(0.dp)
             )
-        }
+        },
+        contentWindowInsets = WindowInsets(0.dp)
     ) { innerPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
 
@@ -118,7 +122,7 @@ fun HomeScreen(
                     // Split layout for Now tab in landscape
                     Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
                         Box(modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
-                            MonthSelectorAndChart(currentMonth, expenses, showRemaining, totalBudget, currencyPreference, languagePreference, viewModel)
+                            MonthSelectorAndChart(currentMonth, expenses, showRemaining, totalBudget.toFloat(), currencyPreference, languagePreference, viewModel)
                         }
                         Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
                             TabRow(selectedTabIndex = selectedSubTab) {
@@ -132,14 +136,14 @@ fun HomeScreen(
                             }
                             SubTabPager(
                                 pagerState = pagerState, expenses = expenses, categoryLimits = categoryLimits,
-                                totalBudget = totalBudget, currencyPreference = currencyPreference, viewModel = viewModel
+                                totalBudget = totalBudget.toFloat(), currencyPreference = currencyPreference, viewModel = viewModel
                             )
                         }
                     }
                 } else {
                     // Standard portrait layout utilizing remaining height properly
                     Column(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                        MonthSelectorAndChart(currentMonth, expenses, showRemaining, totalBudget, currencyPreference, languagePreference, viewModel)
+                        MonthSelectorAndChart(currentMonth, expenses, showRemaining, totalBudget.toFloat(), currencyPreference, languagePreference, viewModel)
 
                         TabRow(selectedTabIndex = selectedSubTab) {
                             subTabs.forEachIndexed { index, title ->
@@ -153,7 +157,7 @@ fun HomeScreen(
 
                         SubTabPager(
                             pagerState = pagerState, expenses = expenses, categoryLimits = categoryLimits,
-                            totalBudget = totalBudget, currencyPreference = currencyPreference, viewModel = viewModel
+                            totalBudget = totalBudget.toFloat(), currencyPreference = currencyPreference, viewModel = viewModel
                         )
                     }
                 }

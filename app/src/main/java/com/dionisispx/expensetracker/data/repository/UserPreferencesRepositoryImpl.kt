@@ -2,7 +2,7 @@ package com.dionisispx.expensetracker.data.repository
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.dionisispx.expensetracker.domain.repository.UserPreferencesRepository
@@ -21,15 +21,15 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 ) : UserPreferencesRepository {
 
     // Keys for saving data safely
-    private val totalBudgetKey = floatPreferencesKey("total_budget")
+    private val totalBudgetKey = intPreferencesKey("total_budget")
     private val categoryLimitsKey = stringPreferencesKey("category_limits")
     private val themePreferenceKey = stringPreferencesKey("theme_preference")
     private val currencyPreferenceKey = stringPreferencesKey("currency_preference")
     private val languagePreferenceKey = stringPreferencesKey("language_preference")
 
     // Flow to read total budget defaulting to 1000
-    override val totalBudget: Flow<Float> = context.dataStore.data.map { preferences ->
-        preferences[totalBudgetKey] ?: 1000f
+    override val totalBudget: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[totalBudgetKey] ?: 1000
     }
 
     // Flow to read category limits from JSON string
@@ -57,12 +57,13 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         preferences[currencyPreferenceKey] ?: "€"
     }
 
+    // Flow to read language preference defaulting to greek
     override val languagePreference: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[languagePreferenceKey] ?: "el"
     }
 
     // Write budget to disk
-    override suspend fun saveTotalBudget(budget: Float) {
+    override suspend fun saveTotalBudget(budget: Int) {
         context.dataStore.edit { preferences ->
             preferences[totalBudgetKey] = budget
         }
@@ -93,6 +94,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         }
     }
 
+    // Write language preference to disk
     override suspend fun saveLanguagePreference(language: String) {
         context.dataStore.edit { preferences ->
             preferences[languagePreferenceKey] = language
