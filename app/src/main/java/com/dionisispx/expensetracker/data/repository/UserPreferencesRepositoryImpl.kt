@@ -18,7 +18,7 @@ val Context.dataStore by preferencesDataStore(name = "user_prefs")
 
 @Singleton
 class UserPreferencesRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) : UserPreferencesRepository {
 
     // Keys for saving data safely
@@ -49,7 +49,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
                 map[key] = jsonObject.getDouble(key).toFloat()
             }
             map
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyMap()
         }
     }

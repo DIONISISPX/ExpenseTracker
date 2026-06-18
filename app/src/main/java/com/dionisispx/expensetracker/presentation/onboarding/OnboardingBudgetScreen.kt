@@ -61,7 +61,7 @@ fun OnboardingBudgetScreen(
     var isInitialized by remember { mutableStateOf(false) }
 
     LaunchedEffect(savedTotalBudget) {
-        if (!isInitialized && savedTotalBudget > 0f) {
+        if (!isInitialized && savedTotalBudget > 0) {
             overallBudgetInput = savedTotalBudget.toString()
             isInitialized = true
         }
@@ -138,7 +138,7 @@ fun OnboardingBudgetScreen(
 
             Button(
                 onClick = { 
-                    val budgetValue = overallBudgetInput.toIntOrNull() ?: savedTotalBudget.toInt()
+                    val budgetValue = overallBudgetInput.toIntOrNull() ?: savedTotalBudget
                     viewModel.saveBudgetAndLimits(budgetValue, savedCategoryLimits)
                     onSetCategoryLimitsClick() 
                 },
@@ -167,7 +167,7 @@ fun OnboardingBudgetScreen(
 
                 Button(
                     onClick = {
-                        val budgetValue = overallBudgetInput.toIntOrNull() ?: savedTotalBudget.toInt()
+                        val budgetValue = overallBudgetInput.toIntOrNull() ?: savedTotalBudget
                         viewModel.saveBudgetAndLimits(budgetValue, savedCategoryLimits)
                         onDoneClick()
                     },
