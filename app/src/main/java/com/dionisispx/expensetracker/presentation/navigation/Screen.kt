@@ -19,4 +19,10 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector?
 
     // Budget settings screen
     object BudgetSettings : Screen("budget_settings", "Budget Settings", null)
+
+    // Onboarding screens
+    object OnboardingWelcome : Screen("onboarding_welcome", "Welcome", null)
+    object OnboardingPrefs : Screen("onboarding_prefs", "Preferences", null)
+    object OnboardingBudget : Screen("onboarding_budget", "Budget Setup", null)
+    object OnboardingBudgetDetailed : Screen("onboarding_budget_detailed", "Budget Setup", null)
 }

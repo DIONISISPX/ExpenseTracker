@@ -59,6 +59,11 @@ class SharedViewModel @Inject constructor(
         viewModelScope, SharingStarted.WhileSubscribed(5000), 1000
     )
 
+    // Read first run from data store
+    val isFirstRun: StateFlow<Boolean?> = prefsRepository.isFirstRun.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), null
+    )
+
     // Read category limits from data store
     val categoryLimits: StateFlow<Map<String, Float>> = prefsRepository.categoryLimits.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap()
@@ -166,6 +171,12 @@ class SharedViewModel @Inject constructor(
         viewModelScope.launch {
             prefsRepository.saveTotalBudget(budget)
             prefsRepository.saveCategoryLimits(limits)
+        }
+    }
+
+    fun setFirstRunCompleted() {
+        viewModelScope.launch {
+            prefsRepository.setFirstRunCompleted()
         }
     }
 

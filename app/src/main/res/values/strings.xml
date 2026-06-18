@@ -8,6 +8,16 @@
     <string name="cancel">Ακύρωση</string>
     <string name="reset">Επαναφορά</string>
     <string name="optional">(προαιρετικά)</string>
+    <string name="next">Επόμενο</string>
+    <string name="skip">Παράλειψη</string>
+    <string name="done">Ολοκλήρωση</string>
+
+    <string name="onboarding_welcome_title">Καλώς ήρθατε στο Expense Tracker</string>
+    <string name="onboarding_welcome_message">Η εφαρμογή που σας βοηθάει να πετύχετε τους οικονομικούς σας στόχους με ευκολία!</string>
+    <string name="onboarding_prefs_title">Ρυθμίσεις</string>
+    <string name="onboarding_prefs_message">Ρυθμίστε τη γλώσσα και το νόμισμα. Επιλέξτε την εμφάνιση της εφαρμογής που προτιμάτε.</string>
+    <string name="onboarding_budget_title">Όρια Προϋπολογισμού</string>
+    <string name="onboarding_budget_message">Ορίστε το μηνιαίο σας όριο για να έχετε τον έλεγχο.</string>
 
     <string name="tab_home">Κεντρική</string>
     <string name="tab_settings">Ρυθμίσεις</string>
@@ -15,6 +25,7 @@
 
     <string name="tab_now">Τώρα</string>
     <string name="tab_history">Ιστορικό</string>
+    <string name="save">Αποθήκευση</string>
     <string name="tab_transactions">Συναλλαγές</string>
     <string name="tab_limits">Όρια</string>
     <string name="yearly_total">Σύνολο Έτους:</string>

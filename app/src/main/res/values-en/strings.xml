@@ -8,6 +8,16 @@
     <string name="cancel">Cancel</string>
     <string name="reset">Reset</string>
     <string name="optional">(optional)</string>
+    <string name="next">Next</string>
+    <string name="skip">Skip</string>
+    <string name="done">Done</string>
+
+    <string name="onboarding_welcome_title">Welcome to Expense Tracker</string>
+    <string name="onboarding_welcome_message">The app that helps you reach your budgeting goals with ease!</string>
+    <string name="onboarding_prefs_title">Settings</string>
+    <string name="onboarding_prefs_message">Set your language and currency. Choose the app appearance you prefer.</string>
+    <string name="onboarding_budget_title">Budget Limits</string>
+    <string name="onboarding_budget_message">Set your monthly limit to stay in control.</string>
 
     <string name="tab_home">Home</string>
     <string name="tab_settings">Settings</string>
@@ -15,6 +25,7 @@
 
     <string name="tab_now">Now</string>
     <string name="tab_history">History</string>
+    <string name="save">Save</string>
     <string name="tab_transactions">Transactions</string>
     <string name="tab_limits">Limits</string>
     <string name="yearly_total">Yearly Total:</string>

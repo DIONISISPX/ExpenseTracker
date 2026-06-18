@@ -62,13 +62,30 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.collectAsState
+import com.dionisispx.expensetracker.presentation.SharedViewModel
 import com.dionisispx.expensetracker.presentation.add_expense.AddExpenseScreen
 import com.dionisispx.expensetracker.presentation.home.HomeScreen
 import com.dionisispx.expensetracker.presentation.budget.BudgetSettingsScreen
 import com.dionisispx.expensetracker.presentation.settings.SettingsScreen
+import com.dionisispx.expensetracker.presentation.onboarding.OnboardingWelcomeScreen
+import com.dionisispx.expensetracker.presentation.onboarding.OnboardingPrefsScreen
+import com.dionisispx.expensetracker.presentation.onboarding.OnboardingBudgetScreen
 
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
+    val viewModel: SharedViewModel = hiltViewModel()
+    val isFirstRun by viewModel.isFirstRun.collectAsState()
+
+    if (isFirstRun == null) {
+        return // Wait for preference to load
+    }
+
+    val startDestination = remember {
+        if (isFirstRun == true) Screen.OnboardingWelcome.route else Screen.Home.route
+    }
+
     // Controller that manages app navigation
     val navController = rememberNavController()
 
@@ -76,8 +93,13 @@ fun MainScreen(modifier: Modifier = Modifier) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Boolean to check if we should show the bottom bar (hide it on AddExpense and Budget settings)
-    val showBottomBar = currentRoute != Screen.AddExpense.route && currentRoute != Screen.BudgetSettings.route
+    // Boolean to check if we should show the bottom bar (hide it on AddExpense, Budget settings, and onboarding)
+    val showBottomBar = currentRoute != Screen.AddExpense.route && 
+                        currentRoute != Screen.BudgetSettings.route &&
+                        currentRoute != Screen.OnboardingWelcome.route &&
+                        currentRoute != Screen.OnboardingPrefs.route &&
+                        currentRoute != Screen.OnboardingBudget.route &&
+                        currentRoute != Screen.OnboardingBudgetDetailed.route
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -154,7 +176,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Home.route,
+            startDestination = startDestination,
             modifier = Modifier.padding(
                 top = innerPadding.calculateTopPadding(),
                 bottom = innerPadding.calculateBottomPadding()
@@ -186,6 +208,55 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     onNavigateBack = {
                         navController.popBackStack()
                     }
+                )
+            }
+            composable(Screen.OnboardingWelcome.route) {
+                OnboardingWelcomeScreen(
+                    onNextClick = { navController.navigate(Screen.OnboardingPrefs.route) },
+                    onSkipClick = {
+                        viewModel.setFirstRunCompleted()
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.OnboardingWelcome.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+            composable(Screen.OnboardingPrefs.route) {
+                OnboardingPrefsScreen(
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onNextClick = { navController.navigate(Screen.OnboardingBudget.route) },
+                    onSkipClick = {
+                        viewModel.setFirstRunCompleted()
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.OnboardingWelcome.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+            composable(Screen.OnboardingBudget.route) {
+                OnboardingBudgetScreen(
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onSetCategoryLimitsClick = { navController.navigate(Screen.OnboardingBudgetDetailed.route) },
+                    onDoneClick = {
+                        viewModel.setFirstRunCompleted()
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.OnboardingWelcome.route) { inclusive = true }
+                        }
+                    },
+                    onSkipClick = {
+                        viewModel.setFirstRunCompleted()
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.OnboardingWelcome.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+            composable(Screen.OnboardingBudgetDetailed.route) {
+                BudgetSettingsScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    viewModel = viewModel
                 )
             }
         }

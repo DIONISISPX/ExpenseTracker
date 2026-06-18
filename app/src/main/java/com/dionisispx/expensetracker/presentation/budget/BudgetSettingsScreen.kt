@@ -50,6 +50,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Button
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -147,11 +148,19 @@ fun BudgetSettingsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        viewModel.saveBudgetAndLimits(overallBudget.toInt(), categoryLimits)
-                        onNavigateBack()
-                    }) {
-                        Icon(imageVector = Icons.Default.Check, contentDescription = "Save", tint = MaterialTheme.colorScheme.primary)
+                    TextButton(
+                        onClick = {
+                            viewModel.saveBudgetAndLimits(overallBudget.toInt(), categoryLimits)
+                            onNavigateBack()
+                        },
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.save),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 16.sp
+                        )
                     }
                 },
                 windowInsets = WindowInsets(0.dp)
@@ -270,7 +279,7 @@ fun BudgetSettingsScreen(
                             stringResource(R.string.remaining) + ": ${String.format(Locale.US, "%.0f", pct)}%"
                         } else {
                             if (currencySymbol == "$") {
-                                stringResource(R.string.remaining) + ": $$${String.format(Locale.US, "%.0f", remainingEur)}"
+                                stringResource(R.string.remaining) + ": $${String.format(Locale.US, "%.0f", remainingEur)}"
                             } else {
                                 stringResource(R.string.remaining) + ": ${String.format(Locale.US, "%.0f", remainingEur)} $currencySymbol"
                             }

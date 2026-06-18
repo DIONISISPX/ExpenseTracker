@@ -1,6 +1,7 @@
 package com.dionisispx.expensetracker.data.repository
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -21,11 +22,17 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 ) : UserPreferencesRepository {
 
     // Keys for saving data safely
+    private val isFirstRunKey = booleanPreferencesKey("is_first_run")
     private val totalBudgetKey = intPreferencesKey("total_budget")
     private val categoryLimitsKey = stringPreferencesKey("category_limits")
     private val themePreferenceKey = stringPreferencesKey("theme_preference")
     private val currencyPreferenceKey = stringPreferencesKey("currency_preference")
     private val languagePreferenceKey = stringPreferencesKey("language_preference")
+
+    // Flow to read is_first_run defaulting to true
+    override val isFirstRun: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[isFirstRunKey] ?: true
+    }
 
     // Flow to read total budget defaulting to 1000
     override val totalBudget: Flow<Int> = context.dataStore.data.map { preferences ->
@@ -66,6 +73,13 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     override suspend fun saveTotalBudget(budget: Int) {
         context.dataStore.edit { preferences ->
             preferences[totalBudgetKey] = budget
+        }
+    }
+
+    // Set first run to completed
+    override suspend fun setFirstRunCompleted() {
+        context.dataStore.edit { preferences ->
+            preferences[isFirstRunKey] = false
         }
     }
 
