@@ -4,8 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import android.net.Uri
 import android.util.Base64
+import androidx.core.net.toUri
 import androidx.exifinterface.media.ExifInterface
 import com.dionisispx.expensetracker.domain.util.ImageProcessor
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -15,19 +15,20 @@ import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
 class AndroidImageProcessor @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) : ImageProcessor {
 
+    // Processes an image URI into a base64 string for API transmission
     override suspend fun getBase64FromUri(uriString: String): Result<String> {
         return withContext(Dispatchers.IO) {
             try {
-                val uri = Uri.parse(uriString)
+                val uri = uriString.toUri()
                 var inputStream = context.contentResolver.openInputStream(uri)
                 val originalBitmap = BitmapFactory.decodeStream(inputStream)
                 inputStream?.close()
 
                 if (originalBitmap != null) {
-                    // Correct orientation
+                    // Adjusts image rotation based on metadata
                     inputStream = context.contentResolver.openInputStream(uri)
                     val exif = ExifInterface(inputStream!!)
                     val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
@@ -40,7 +41,7 @@ class AndroidImageProcessor @Inject constructor(
                         ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
                     }
 
-                    // Scale image down
+                    // Compresses image dimensions to reduce payload size
                     val maxDimension = 1024f
                     val scale = minOf(maxDimension / originalBitmap.width, maxDimension / originalBitmap.height)
 
@@ -49,15 +50,15 @@ class AndroidImageProcessor @Inject constructor(
                     }
                     val processedBitmap = Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.width, originalBitmap.height, matrix, true)
 
-                    // Clean up original bitmap if it's different from the processed one
+                    // Frees memory allocated for the original unscaled image
                     if (processedBitmap != originalBitmap) {
                         originalBitmap.recycle()
                     }
 
-                    // Convert to base64
+                    // Encodes the processed image to a base64 string
                     val byteArrayOutputStream = ByteArrayOutputStream()
                     processedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream)
-                    processedBitmap.recycle() // Clean up after compression
+                    processedBitmap.recycle() // Frees memory allocated for the compressed image
 
                     val imageBytes = byteArrayOutputStream.toByteArray()
                     val base64Image = Base64.encodeToString(imageBytes, Base64.NO_WRAP)

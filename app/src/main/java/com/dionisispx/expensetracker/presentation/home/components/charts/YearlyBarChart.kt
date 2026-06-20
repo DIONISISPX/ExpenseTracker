@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -65,7 +66,7 @@ fun YearlyBarChart(
                                 .fillMaxWidth(0.7f)
                                 .fillMaxHeight(0.01f)
                                 .background(
-                                    color = MaterialTheme.colorScheme.error,
+                                    color = Color.Red,
                                     shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
                                 )
                         )
@@ -76,7 +77,7 @@ fun YearlyBarChart(
                                 .fillMaxHeight(heightFraction.coerceAtLeast(0.01f))
                                 .background(
                                     color = when {
-                                        isOverBudget -> MaterialTheme.colorScheme.error
+                                        isOverBudget -> Color.Red
                                         else -> MaterialTheme.colorScheme.primary
                                     },
                                     shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)

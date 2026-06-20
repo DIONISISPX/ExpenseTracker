@@ -86,14 +86,14 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
                 Text(
                     text = if (isOver) stringResource(R.string.over_budget) else stringResource(R.string.remaining),
                     style = MaterialTheme.typography.labelMedium,
-                    color = if (isOver) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (isOver) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
                 Text(
                     text = if (currencySymbol == "$") "$$formattedValue" else "$formattedValue $currencySymbol",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (isOver) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+                    color = if (isOver) Color.Red else MaterialTheme.colorScheme.onSurface
                 )
             } else {
                 val formattedSpent = String.format(Locale.US, "%.2f", totalSpent)

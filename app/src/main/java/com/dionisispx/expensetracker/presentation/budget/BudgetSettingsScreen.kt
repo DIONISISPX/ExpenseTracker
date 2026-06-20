@@ -64,6 +64,7 @@ import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.presentation.SharedViewModel
 import com.dionisispx.expensetracker.presentation.util.getCategoryDetails
 import java.util.Locale
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -398,7 +399,7 @@ fun CategoryLimitRow(
                 Slider(
                     value = displayValue,
                     onValueChange = { newValue ->
-                        val snappedValue = Math.round(newValue).toFloat()
+                        val snappedValue = newValue.roundToInt().toFloat()
                         val newEurValue = if (isPercentMode) {
                             (snappedValue / 100f) * overallBudget
                         } else {

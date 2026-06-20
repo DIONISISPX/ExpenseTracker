@@ -98,7 +98,7 @@ fun CameraPreview(
                     val preview = androidx.camera.core.Preview.Builder()
                         .build()
                         .also {
-                            it.setSurfaceProvider(previewView.surfaceProvider)
+                            it.surfaceProvider = previewView.surfaceProvider
                         }
 
                     val cameraSelector = androidx.camera.core.CameraSelector.DEFAULT_BACK_CAMERA

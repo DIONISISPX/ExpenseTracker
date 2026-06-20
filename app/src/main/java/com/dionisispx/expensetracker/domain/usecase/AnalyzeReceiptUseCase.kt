@@ -4,42 +4,43 @@ import com.dionisispx.expensetracker.domain.model.ReceiptData
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.math.abs
+import kotlin.math.round
 
 class AnalyzeReceiptUseCase @Inject constructor() {
 
-    // Bare price pattern bounded by non-digit context
+    // Matches bare price patterns
     private val priceRegex = Regex("(?<!\\d)\\d+\\s*[.,]\\s*\\d{2}(?!\\d)")
 
-    // Euro-prefixed price for higher confidence matches
+    // Matches prices with euro symbol
     private val euroPriceRegex = Regex("€\\s*(\\d+\\s*[.,]\\s*\\d{2})(?!\\d)")
 
-    // OCR-tolerant pattern for Greek total allowing common letter swaps
+    // Matches greek total keyword
     private val greekTotalRegex = Regex("[ΣS][ΥYU][ΝN][ΟO0][ΛL][ΟO0]")
 
-    // OCR-tolerant pattern for Greek subtotal prefix
+    // Matches greek subtotal keyword
     private val greekSubtotalRegex = Regex("[ΜM][ΕE][ΡRP][ΙI][ΚK][ΟO0]")
 
-    // Latin total keyword bounded by word edges
+    // Matches english total keyword
     private val totalLatinRegex = Regex("\\bTOTAL\\b")
 
-    // Latin subtotal variants
+    // Matches english subtotal keyword
     private val subtotalLatinRegex = Regex("\\b(SUBTOTAL|SUB\\s*TOTAL)\\b")
 
-    // Greek payable amount keyword
+    // Matches greek payable keyword
     private val payableRegex = Regex("ΠΛΗΡΩΤ[ΕE][ΟO0]")
 
-    // Payment method lines should never be treated as totals
+    // Words indicating payment methods
     private val paymentKeywords = listOf(
         "ΜΕΤΡΗΤΑ", "ΚΑΡΤΑ", "ΠΙΣΤΩΤΙΚΗ", "ΠΛΗΡΩΜΗ",
         "ΡΕΣΤΑ", "CHANGE", "CARD", "CASH", "VISA", "MASTERCARD"
     )
 
-    // Metadata lines that carry non-price numbers
+    // Words indicating metadata lines
     private val metadataKeywords = listOf(
         "ΤΗΛ", "ΑΦΜ", "ΔΟΥ", "ΠΟΣΟΤΗΤΑ", "QTY", "QUANTITY"
     )
 
-    // Noise patterns: dates, order numbers, phone numbers, timestamps
+    // Patterns for dates and identifiers
     private val noisePatterns = listOf(
         Regex("#\\d{3,}"),
         Regex("\\d{2}[/.]\\d{2}[/.]\\d{2,4}"),
@@ -47,6 +48,7 @@ class AnalyzeReceiptUseCase @Inject constructor() {
         Regex("\\d{2}:\\d{2}")
     )
 
+    // Analyzes raw receipt text and returns extracted data
     operator fun invoke(text: String, userDictionary: Map<String, String>): ReceiptData {
         var finalStore = ""
         var finalAmount: String
@@ -54,17 +56,19 @@ class AnalyzeReceiptUseCase @Inject constructor() {
 
         val upperText = text.uppercase()
 
-        // Clean text for store name matching by removing punctuation
+        // Remove punctuation for store name matching
         val cleanTextForNames = upperText
             .replace("\"", "").replace("'", "")
             .replace("«", "").replace("»", "")
             .replace(".", " ").replace(",", " ")
 
+        // Common greek company suffixes to ignore
         val companySuffixes = setOf(
             "ΙΚΕ", "IKE", "ΑΕ", "AE", "ΕΠΕ", "EPE", "ΟΕ", "OE", "ΕΕ", "EE",
             "ΜΙΚΕ", "MIKE", "ΜΕΠΕ", "MEPE", "ΑΕΒΕ", "AEBE"
         )
 
+        // Filter out suffixes from words
         val words = cleanTextForNames.split(Regex("\\s+"))
             .filter { it.isNotBlank() }
             .map { it.trim() }
@@ -73,6 +77,7 @@ class AnalyzeReceiptUseCase @Inject constructor() {
                 normalizedWord !in companySuffixes
             }
 
+        // Predefined store to category mappings
         val seedDictionary = mapOf(
             "ΣΚΛΑΒΕΝΙΤΗΣ" to "Groceries",
             "ΓΑΛΑΞΙΑΣ" to "Groceries",
@@ -140,11 +145,13 @@ class AnalyzeReceiptUseCase @Inject constructor() {
             "ΕΥΔΑΠ" to "Bills & Utilities"
         )
 
+        // Merge seed data with user dictionary
         val combinedDictionary = seedDictionary + userDictionary
 
-        // Build n-gram phrases for fuzzy store name matching
         var bestMatchScore = 0.0
         val phrases = mutableListOf<String>()
+        
+        // Build n-gram combinations up to four words
         for (i in words.indices) {
             phrases.add(words[i])
             if (i < words.size - 1) phrases.add("${words[i]} ${words[i + 1]}")
@@ -152,6 +159,7 @@ class AnalyzeReceiptUseCase @Inject constructor() {
             if (i < words.size - 3) phrases.add("${words[i]} ${words[i + 1]} ${words[i + 2]} ${words[i + 3]}")
         }
 
+        // Compare generated phrases against dictionary
         for (phrase in phrases) {
             if (phrase.length < 3) continue
             for ((store, category) in combinedDictionary) {
@@ -167,6 +175,7 @@ class AnalyzeReceiptUseCase @Inject constructor() {
             }
         }
 
+        // Use top text line as fallback if no store is matched
         if (finalStore.isEmpty()) {
             val ignoreTokens = listOf("ΑΠΟΔΕΙΞΗ", "ΕΙΔΙΚΟ", "ΦΟΡΟΛΟΓΙΚΟ", "ΔΕΛΤΙΟ", "ΕΝΑΡΞΗ", "ΛΗΞΗ", "ΝΟΜΙΜΗ", "ΠΩΛΗΣΗΣ", "ΛΙΑΝΙΚΗΣ", "ΕΚΔΟΣΗΣ")
             for (line in upperText.lines().map { it.trim() }) {
@@ -180,12 +189,13 @@ class AnalyzeReceiptUseCase @Inject constructor() {
             }
         }
 
+        // Process total amount from text
         finalAmount = extractTotal(upperText)
 
         return ReceiptData(finalStore, finalAmount, finalCategory)
     }
 
-    // Runs keyword scan then falls back to structural heuristics
+    // Identifies the final total amount from the text
     private fun extractTotal(upperText: String): String {
         val lines = upperText.lines().map { it.trim() }.filter { it.isNotEmpty() }
         if (lines.isEmpty()) return ""
@@ -193,6 +203,7 @@ class AnalyzeReceiptUseCase @Inject constructor() {
         val totalPrices = mutableListOf<Double>()
         val subtotalPrices = mutableListOf<Double>()
 
+        // Scan lines for total and subtotal keywords
         for (i in lines.indices) {
             val stripped = stripGreekAccents(lines[i])
             if (paymentKeywords.any { stripped.contains(it) }) continue
@@ -210,9 +221,12 @@ class AnalyzeReceiptUseCase @Inject constructor() {
             }
         }
 
+        // Return highest total price found
         if (totalPrices.isNotEmpty()) {
             return formatPrice(totalPrices.maxOrNull()!!)
         }
+        
+        // Return highest subtotal price found
         if (subtotalPrices.isNotEmpty()) {
             return formatPrice(subtotalPrices.maxOrNull()!!)
         }
@@ -220,25 +234,24 @@ class AnalyzeReceiptUseCase @Inject constructor() {
         return structuralFallback(lines)
     }
 
-    // Extracts all prices near a given line index
+    // Extracts numeric prices surrounding a specific line index
     private fun findPricesNear(lines: List<String>, targetIndex: Int): List<Double> {
         val found = mutableListOf<Double>()
-        // Labels usually precede their values or are on the same line.
-        // We only check the current line and the next two lines.
         val offsets = listOf(0, 1, 2)
+        
+        // Check current and next two lines
         for (offset in offsets) {
             val idx = targetIndex + offset
             if (idx !in lines.indices) continue
             val line = lines[idx]
 
-            // Only validate adjacent lines against payment and metadata keywords
             if (offset != 0) {
                 val stripped = stripGreekAccents(line)
                 if (paymentKeywords.any { stripped.contains(it) }) continue
                 if (metadataKeywords.any { stripped.contains(it) }) continue
             }
 
-            // Extract all possible prices
+            // Extract values using regex patterns
             euroPriceRegex.findAll(line).forEach {
                 it.groupValues[1].replace(" ", "").replace(",", ".").toDoubleOrNull()?.let { num -> found.add(num) }
             }
@@ -249,12 +262,13 @@ class AnalyzeReceiptUseCase @Inject constructor() {
         return found
     }
 
-    // Fallback when no keywords are found, using position and duplicate heuristics
+    // Calculates total without keywords using structural heuristics
     private fun structuralFallback(lines: List<String>): String {
         data class PriceEntry(val amount: Double, val lineIndex: Int)
 
         val prices = mutableListOf<PriceEntry>()
 
+        // Collect all valid prices
         for (i in lines.indices) {
             val line = lines[i]
             val stripped = stripGreekAccents(line)
@@ -274,7 +288,7 @@ class AnalyzeReceiptUseCase @Inject constructor() {
         val bottomHalfStart = lines.size / 2
         val bottomPrices = prices.filter { it.lineIndex >= bottomHalfStart }
 
-        // Duplicate in bottom half usually means subtotal echoed as total
+        // Find frequently repeated amounts in bottom half
         val duplicateGroup = bottomPrices
             .groupBy { roundCents(it.amount) }
             .filter { it.value.size >= 2 }
@@ -284,7 +298,7 @@ class AnalyzeReceiptUseCase @Inject constructor() {
             return formatPrice(duplicateGroup.key)
         }
 
-        // Cash payment pattern: total + change = cash tendered
+        // Check for cash tendered pattern
         for (j in 0..prices.size - 3) {
             val a = prices[j].amount
             val b = prices[j+1].amount
@@ -294,29 +308,32 @@ class AnalyzeReceiptUseCase @Inject constructor() {
             }
         }
 
-        // Largest value in the bottom half, or overall largest as last resort
+        // Fallback to the highest price in bottom half
         val best = (bottomPrices.ifEmpty { prices }).maxByOrNull { it.amount }
         return if (best != null) formatPrice(best.amount) else ""
     }
 
-    // Returns true for common Greek VAT rate values
+    // Checks if number is a standard greek tax rate
     private fun isVatRate(num: Double): Boolean {
         return doublesEqual(num, 6.0) || doublesEqual(num, 13.0) || doublesEqual(num, 24.0)
     }
 
-    // Compares doubles with cent-level tolerance to avoid floating point drift
+    // Validates equality for doubles using a threshold
     private fun doublesEqual(a: Double, b: Double): Boolean {
         return abs(a - b) < 0.005
     }
 
+    // Rounds value to exactly two decimal places
     private fun roundCents(value: Double): Double {
-        return Math.round(value * 100) / 100.0
+        return round(value * 100) / 100.0
     }
 
+    // Formats double as standard price string
     private fun formatPrice(value: Double): String {
         return String.format(Locale.US, "%.2f", value)
     }
 
+    // Calculates text similarity ratio using levenshtein distance
     private fun similarity(s1: String, s2: String): Double {
         var longer = s1
         var shorter = s2
@@ -329,12 +346,17 @@ class AnalyzeReceiptUseCase @Inject constructor() {
         return (longerLength - levenshteinDistance(longer, shorter)) / longerLength.toDouble()
     }
 
+    // Computes edit distance between two strings
     private fun levenshteinDistance(lhs: CharSequence, rhs: CharSequence): Int {
         val len0 = lhs.length + 1
         val len1 = rhs.length + 1
         var cost = IntArray(len0)
         var newcost = IntArray(len0)
+        
+        // Initialize base costs
         for (i in 0 until len0) cost[i] = i
+        
+        // Calculate matrix
         for (j in 1 until len1) {
             newcost[0] = j
             for (i in 1 until len0) {
@@ -351,6 +373,7 @@ class AnalyzeReceiptUseCase @Inject constructor() {
         return cost[len0 - 1]
     }
 
+    // Removes all accent marks from greek letters
     private fun stripGreekAccents(input: String): String {
         return input
             .replace("Ά", "Α").replace("Έ", "Ε").replace("Ή", "Η")
@@ -362,6 +385,7 @@ class AnalyzeReceiptUseCase @Inject constructor() {
             .replace("ΐ", "ι").replace("ΰ", "υ")
     }
 
+    // Simplifies string to base latin characters for fuzzy matching
     private fun normalizeForFuzzy(input: String): String {
         return stripGreekAccents(input.uppercase())
             .replace(".", "").replace(",", "").replace("-", "")
@@ -373,4 +397,3 @@ class AnalyzeReceiptUseCase @Inject constructor() {
             .replace("Z", "Ζ").replace("B", "Β").replace("U", "Υ")
     }
 }
-

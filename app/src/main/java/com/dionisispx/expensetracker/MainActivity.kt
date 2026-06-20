@@ -24,7 +24,7 @@ import java.util.Locale
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge() // Draw app underneath navigation/status bar
         setContent {
             val viewModel: SharedViewModel = hiltViewModel()
             val themePreference by viewModel.themePreference.collectAsState()

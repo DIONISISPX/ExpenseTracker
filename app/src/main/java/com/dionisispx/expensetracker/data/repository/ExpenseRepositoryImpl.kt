@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
-// Actual implementation that talks to the room database
+// Implements data operations using the local database
 class ExpenseRepositoryImpl @Inject constructor(
     private val dao: ExpenseDao
 ) : ExpenseRepository {

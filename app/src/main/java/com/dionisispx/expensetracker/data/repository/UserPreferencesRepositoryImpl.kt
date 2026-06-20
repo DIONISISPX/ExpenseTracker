@@ -21,7 +21,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) : UserPreferencesRepository {
 
-    // Keys for saving data safely
+    // Defines keys for typed datastore preferences
     private val isFirstRunKey = booleanPreferencesKey("is_first_run")
     private val totalBudgetKey = intPreferencesKey("total_budget")
     private val categoryLimitsKey = stringPreferencesKey("category_limits")
@@ -29,17 +29,17 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     private val currencyPreferenceKey = stringPreferencesKey("currency_preference")
     private val languagePreferenceKey = stringPreferencesKey("language_preference")
 
-    // Flow to read is_first_run defaulting to true
+    // Observes the initial launch state
     override val isFirstRun: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[isFirstRunKey] ?: true
     }
 
-    // Flow to read total budget defaulting to 1000
+    // Observes the global budget limit
     override val totalBudget: Flow<Int> = context.dataStore.data.map { preferences ->
         preferences[totalBudgetKey] ?: 1000
     }
 
-    // Flow to read category limits from JSON string
+    // Observes and deserializes category-specific budgets
     override val categoryLimits: Flow<Map<String, Float>> = context.dataStore.data.map { preferences ->
         val jsonString = preferences[categoryLimitsKey] ?: "{}"
         try {
@@ -54,36 +54,36 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         }
     }
 
-    // Flow to read theme preference defaulting to system setting
+    // Observes the active UI theme
     override val themePreference: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[themePreferenceKey] ?: "system"
     }
 
-    // Flow to read currency preference defaulting to euro
+    // Observes the display currency
     override val currencyPreference: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[currencyPreferenceKey] ?: "€"
     }
 
-    // Flow to read language preference defaulting to greek
+    // Observes the application display language
     override val languagePreference: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[languagePreferenceKey] ?: "el"
     }
 
-    // Write budget to disk
+    // Persists the global budget limit
     override suspend fun saveTotalBudget(budget: Int) {
         context.dataStore.edit { preferences ->
             preferences[totalBudgetKey] = budget
         }
     }
 
-    // Set first run to completed
+    // Marks the onboarding process as complete
     override suspend fun setFirstRunCompleted() {
         context.dataStore.edit { preferences ->
             preferences[isFirstRunKey] = false
         }
     }
 
-    // Write limits to disk
+    // Serializes and persists category-specific budgets
     override suspend fun saveCategoryLimits(limits: Map<String, Float>) {
         context.dataStore.edit { preferences ->
             val jsonObject = JSONObject()
@@ -94,21 +94,21 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         }
     }
 
-    // Write theme preference to disk
+    // Persists the chosen UI theme
     override suspend fun saveThemePreference(theme: String) {
         context.dataStore.edit { preferences ->
             preferences[themePreferenceKey] = theme
         }
     }
 
-    // Write currency preference to disk
+    // Persists the chosen display currency
     override suspend fun saveCurrencyPreference(currency: String) {
         context.dataStore.edit { preferences ->
             preferences[currencyPreferenceKey] = currency
         }
     }
 
-    // Write language preference to disk
+    // Persists the chosen display language
     override suspend fun saveLanguagePreference(language: String) {
         context.dataStore.edit { preferences ->
             preferences[languagePreferenceKey] = language

@@ -28,22 +28,23 @@ class SharedViewModel @Inject constructor(
     private val _expenses = MutableStateFlow<List<Expense>>(emptyList())
     val expenses: StateFlow<List<Expense>> = _expenses.asStateFlow()
 
-    // State to hold the currently selected month and year
+    // Tracks the currently selected month and year
     private val _currentMonth = MutableStateFlow(YearMonth.now())
     val currentMonth: StateFlow<YearMonth> = _currentMonth.asStateFlow()
 
-    // State to hold the currently selected year for the history tab
+    // Tracks the selected year for history view
     private val _currentYear = MutableStateFlow(YearMonth.now().year)
     val currentYear: StateFlow<Int> = _currentYear.asStateFlow()
 
-    // State to hold all expenses for the selected year
+    // Tracks all expenses within the selected year
     private val _yearlyExpenses = MutableStateFlow<List<Expense>>(emptyList())
     val yearlyExpenses: StateFlow<List<Expense>> = _yearlyExpenses.asStateFlow()
 
-    // State to toggle between spent and remaining views
+    // Toggles between spent and remaining budget views
     private val _showRemaining = MutableStateFlow(false)
     val showRemaining: StateFlow<Boolean> = _showRemaining.asStateFlow()
 
+    // Calculates aggregated monthly expense totals
     val monthlyTotals: StateFlow<FloatArray> = _yearlyExpenses.map { expenses ->
         val totals = FloatArray(12)
         expenses.forEach { expense ->
@@ -52,51 +53,51 @@ class SharedViewModel @Inject constructor(
             totals[monthIndex] += expense.amount.toFloat()
         }
         totals
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FloatArray(12) { 0f })
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FloatArray(12))
 
-    // Read budget limits from data store
+    // Observes total budget limit
     val totalBudget: StateFlow<Int> = prefsRepository.totalBudget.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), 1000
     )
 
-    // Read first run from data store
+    // Observes initial launch state
     val isFirstRun: StateFlow<Boolean?> = prefsRepository.isFirstRun.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), null
     )
 
-    // Read category limits from data store
+    // Observes category-specific budget limits
     val categoryLimits: StateFlow<Map<String, Float>> = prefsRepository.categoryLimits.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap()
     )
 
-    // Read theme preference from data store
+    // Observes UI theme preference
     val themePreference: StateFlow<String> = prefsRepository.themePreference.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), "system"
     )
 
-    // Read currency preference from data store
+    // Observes display currency preference
     val currencyPreference: StateFlow<String> = prefsRepository.currencyPreference.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), "€"
     )
 
-    // Read language preference from data store
+    // Observes display language preference
     val languagePreference: StateFlow<String> = prefsRepository.languagePreference.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), "el"
     )
 
-    // Keeps track of the active database queries
+    // Stores active database query jobs to allow cancellation
     private var currentMonthJob: Job? = null
     private var currentYearJob: Job? = null
 
     init {
-        // Whenever the month changes automatically fetch the new data
+        // Subscribes to month changes to trigger data refresh
         viewModelScope.launch {
             _currentMonth.collect { month ->
                 loadExpensesForMonth(month)
             }
         }
 
-        // Listen for year changes and fetch yearly data
+        // Subscribes to year changes to trigger history refresh
         viewModelScope.launch {
             _currentYear.collect { year ->
                 loadExpensesForYear(year)
@@ -104,14 +105,14 @@ class SharedViewModel @Inject constructor(
         }
     }
 
-    // Fetches expenses for a whole month
+    // Loads all expenses for a specific month
     private fun loadExpensesForMonth(yearMonth: YearMonth) {
-        // Cancel previous fetch if user clicks arrows too fast
+        // Cancels ongoing queries to prevent race conditions
         currentMonthJob?.cancel()
         currentMonthJob = viewModelScope.launch {
-            // Convert the first day of the month to milliseconds
+            // Calculates start timestamp for the selected month
             val startOfMonth = yearMonth.atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            // Convert the last day of the month to milliseconds
+            // Calculates end timestamp for the selected month
             val endOfMonth = yearMonth.atEndOfMonth().atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
             repository.getExpensesByDateRange(startOfMonth, endOfMonth).collect { expenseList ->
@@ -120,14 +121,14 @@ class SharedViewModel @Inject constructor(
         }
     }
 
-    // Fetches expenses for an entire year
+    // Loads all expenses for a specific year
     private fun loadExpensesForYear(year: Int) {
-        // Cancel previous fetch if user clicks arrows too fast
+        // Cancels ongoing queries to prevent race conditions
         currentYearJob?.cancel()
         currentYearJob = viewModelScope.launch {
-            // Convert the first day of the year to milliseconds
+            // Calculates start timestamp for the selected year
             val startOfYear = YearMonth.of(year, 1).atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            // Convert the last day of the year to milliseconds
+            // Calculates end timestamp for the selected year
             val endOfYear = YearMonth.of(year, 12).atEndOfMonth().atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
             repository.getExpensesByDateRange(startOfYear, endOfYear).collect { expenseList ->
@@ -136,37 +137,37 @@ class SharedViewModel @Inject constructor(
         }
     }
 
-    // Move to the next month
+    // Advances current month by one
     fun nextMonth() {
         _currentMonth.value = _currentMonth.value.plusMonths(1)
     }
 
-    // Move to the previous month
+    // Rewinds current month by one
     fun previousMonth() {
         _currentMonth.value = _currentMonth.value.minusMonths(1)
     }
 
-    // Move to the next year
+    // Advances current year by one
     fun nextYear() {
         _currentYear.value += 1
     }
 
-    // Move to the previous year
+    // Rewinds current year by one
     fun previousYear() {
         _currentYear.value -= 1
     }
 
-    // Add new expense to database
+    // Inserts a new expense record
     fun addExpense(expense: Expense) {
         viewModelScope.launch { repository.insertExpense(expense) }
     }
 
-    // Delete expense from database
+    // Removes an existing expense record
     fun deleteExpense(expense: Expense) {
         viewModelScope.launch { repository.deleteExpense(expense) }
     }
 
-    // Save new limits to data store
+    // Updates global budget and category limits
     fun saveBudgetAndLimits(budget: Int, limits: Map<String, Float>) {
         viewModelScope.launch {
             prefsRepository.saveTotalBudget(budget)
@@ -174,48 +175,51 @@ class SharedViewModel @Inject constructor(
         }
     }
 
+    // Marks initial onboarding as completed
     fun setFirstRunCompleted() {
         viewModelScope.launch {
             prefsRepository.setFirstRunCompleted()
         }
     }
 
-    // Save theme preference to data store
+    // Updates UI theme preference
     fun saveThemePreference(theme: String) {
         viewModelScope.launch {
             prefsRepository.saveThemePreference(theme)
         }
     }
 
-    // Save currency preference to data store
+    // Updates display currency preference
     fun saveCurrencyPreference(currency: String) {
         viewModelScope.launch {
             prefsRepository.saveCurrencyPreference(currency)
         }
     }
 
-    // Delete all data from database and reset preferences
+    // Clears all expense data and resets limits
     fun deleteAllData() {
         viewModelScope.launch {
-            // Wipes the database
+            // Deletes all database records
             repository.deleteAllExpenses()
-            // Resets the budget and limits back to default
+            // Reverts preferences to factory defaults
             prefsRepository.saveTotalBudget(1000)
             prefsRepository.saveCategoryLimits(emptyMap())
         }
     }
 
-    // Fetch a single snapshot of all expenses for exporting
+    // Fetches a complete snapshot of all expenses
     suspend fun getAllExpensesSnapshot(): List<Expense> {
         return repository.getAllExpenses().firstOrNull() ?: emptyList()
     }
 
+    // Updates display language preference
     fun saveLanguagePreference(language: String) {
         viewModelScope.launch {
             prefsRepository.saveLanguagePreference(language)
         }
     }
 
+    // Toggles budget display mode
     fun toggleShowRemaining() {
         _showRemaining.value = !_showRemaining.value
     }
