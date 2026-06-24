@@ -38,7 +38,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dionisispx.expensetracker.R
-import com.dionisispx.expensetracker.presentation.SharedViewModel
+import com.dionisispx.expensetracker.presentation.ExpenseViewModel
+import com.dionisispx.expensetracker.presentation.BudgetViewModel
+import com.dionisispx.expensetracker.presentation.PreferencesViewModel
 import com.dionisispx.expensetracker.presentation.home.components.dashboard.MonthSelectorAndChart
 import com.dionisispx.expensetracker.presentation.home.components.dashboard.SubTabPager
 import com.dionisispx.expensetracker.presentation.home.components.history.HistoryBreakdown
@@ -46,19 +48,21 @@ import com.dionisispx.expensetracker.presentation.home.components.history.Histor
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
-    viewModel: SharedViewModel = hiltViewModel()
+    expenseViewModel: ExpenseViewModel = hiltViewModel(),
+    budgetViewModel: BudgetViewModel = hiltViewModel(),
+    prefsViewModel: PreferencesViewModel = hiltViewModel()
 ) {
     // Observe database and view model states
-    val expenses by viewModel.expenses.collectAsState()
-    val yearlyExpenses by viewModel.yearlyExpenses.collectAsState()
-    val monthlyTotals by viewModel.monthlyTotals.collectAsState()
-    val currentMonth by viewModel.currentMonth.collectAsState()
-    val currentYear by viewModel.currentYear.collectAsState()
-    val languagePreference by viewModel.languagePreference.collectAsState()
-    val totalBudget by viewModel.totalBudget.collectAsState()
-    val categoryLimits by viewModel.categoryLimits.collectAsState()
-    val currencyPreference by viewModel.currencyPreference.collectAsState()
-    val showRemaining by viewModel.showRemaining.collectAsState()
+    val expenses by expenseViewModel.expenses.collectAsState()
+    val yearlyExpenses by expenseViewModel.yearlyExpenses.collectAsState()
+    val monthlyTotals by expenseViewModel.monthlyTotals.collectAsState()
+    val currentMonth by expenseViewModel.currentMonth.collectAsState()
+    val currentYear by expenseViewModel.currentYear.collectAsState()
+    val languagePreference by prefsViewModel.languagePreference.collectAsState()
+    val totalBudget by budgetViewModel.totalBudget.collectAsState()
+    val categoryLimits by budgetViewModel.categoryLimits.collectAsState()
+    val currencyPreference by prefsViewModel.currencyPreference.collectAsState()
+    val showRemaining by budgetViewModel.showRemaining.collectAsState()
 
     // Setup interactive states
     var selectedMainTab by remember { mutableIntStateOf(0) }
@@ -90,7 +94,7 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text(text = stringResource(R.string.app_name), fontWeight = FontWeight.Bold) },
                 actions = {
-                    IconButton(onClick = { viewModel.toggleShowRemaining() }) {
+                    IconButton(onClick = { budgetViewModel.toggleShowRemaining() }) {
                         Icon(
                             imageVector = Icons.Default.SwapHoriz,
                             contentDescription = "Toggle budget view",
@@ -121,7 +125,7 @@ fun HomeScreen(
                     // Split layout for Now tab in landscape
                     Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
                         Box(modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
-                            MonthSelectorAndChart(currentMonth, expenses, showRemaining, totalBudget.toFloat(), currencyPreference, languagePreference, viewModel)
+                            MonthSelectorAndChart(currentMonth, expenses, showRemaining, totalBudget.toFloat(), currencyPreference, languagePreference, expenseViewModel)
                         }
                         Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
                             TabRow(selectedTabIndex = selectedSubTab) {
@@ -135,14 +139,15 @@ fun HomeScreen(
                             }
                             SubTabPager(
                                 pagerState = pagerState, expenses = expenses, categoryLimits = categoryLimits,
-                                totalBudget = totalBudget.toFloat(), currencyPreference = currencyPreference, viewModel = viewModel
+                                totalBudget = totalBudget.toFloat(), currencyPreference = currencyPreference,
+                                onDeleteExpense = { expenseViewModel.deleteExpense(it) }
                             )
                         }
                     }
                 } else {
                     // Standard portrait layout utilizing remaining height properly
                     Column(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                        MonthSelectorAndChart(currentMonth, expenses, showRemaining, totalBudget.toFloat(), currencyPreference, languagePreference, viewModel)
+                        MonthSelectorAndChart(currentMonth, expenses, showRemaining, totalBudget.toFloat(), currencyPreference, languagePreference, expenseViewModel)
 
                         TabRow(selectedTabIndex = selectedSubTab) {
                             subTabs.forEachIndexed { index, title ->
@@ -156,7 +161,8 @@ fun HomeScreen(
 
                         SubTabPager(
                             pagerState = pagerState, expenses = expenses, categoryLimits = categoryLimits,
-                            totalBudget = totalBudget.toFloat(), currencyPreference = currencyPreference, viewModel = viewModel
+                            totalBudget = totalBudget.toFloat(), currencyPreference = currencyPreference,
+                            onDeleteExpense = { expenseViewModel.deleteExpense(it) }
                         )
                     }
                 }
@@ -170,7 +176,7 @@ fun HomeScreen(
                     isLandscape = isLandscape,
                     showRemaining = showRemaining,
                     totalBudget = totalBudget.toFloat(),
-                    viewModel = viewModel,
+                    expenseViewModel = expenseViewModel,
                     modifier = Modifier.weight(1f).fillMaxWidth()
                 )
             }

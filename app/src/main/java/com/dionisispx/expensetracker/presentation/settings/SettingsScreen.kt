@@ -56,7 +56,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.domain.model.Expense
-import com.dionisispx.expensetracker.presentation.SharedViewModel
+import com.dionisispx.expensetracker.presentation.PreferencesViewModel
+import com.dionisispx.expensetracker.presentation.ExpenseViewModel
+import com.dionisispx.expensetracker.presentation.BudgetViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -66,15 +68,17 @@ import java.util.Locale
 @Composable
 fun SettingsScreen(
     onNavigateToBudget: () -> Unit,
-    viewModel: SharedViewModel = hiltViewModel()
+    prefsViewModel: PreferencesViewModel = hiltViewModel(),
+    expenseViewModel: ExpenseViewModel = hiltViewModel(),
+    budgetViewModel: BudgetViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     // Observe database values for preferences
-    val currentTheme by viewModel.themePreference.collectAsState()
-    val currentCurrency by viewModel.currencyPreference.collectAsState()
-    val currentLanguage by viewModel.languagePreference.collectAsState()
+    val currentTheme by prefsViewModel.themePreference.collectAsState()
+    val currentCurrency by prefsViewModel.currencyPreference.collectAsState()
+    val currentLanguage by prefsViewModel.languagePreference.collectAsState()
 
     // State variables for dropdown menus
     var isThemeDropdownExpanded by remember { mutableStateOf(false) }
@@ -116,7 +120,7 @@ fun SettingsScreen(
             if (uri != null) {
                 coroutineScope.launch {
                     try {
-                        val allExpenses = viewModel.getAllExpensesSnapshot()
+                        val allExpenses = expenseViewModel.getAllExpensesSnapshot()
                         val csvData = generateCsvContent(allExpenses, currentCurrency)
 
                         context.contentResolver.openOutputStream(uri)?.use { outputStream ->
@@ -247,7 +251,7 @@ fun SettingsScreen(
                                 DropdownMenuItem(
                                     text = { Text(label) },
                                     onClick = {
-                                        viewModel.saveThemePreference(value)
+                                        prefsViewModel.saveThemePreference(value)
                                         isThemeDropdownExpanded = false
                                     }
                                 )
@@ -310,7 +314,7 @@ fun SettingsScreen(
                                     text = { Text(label) },
                                     onClick = {
                                         if (currentLanguage != value) {
-                                            viewModel.saveLanguagePreference(value)
+                                            prefsViewModel.saveLanguagePreference(value)
                                         }
                                         isLanguageDropdownExpanded = false
                                     }
@@ -373,7 +377,7 @@ fun SettingsScreen(
                                 DropdownMenuItem(
                                     text = { Text(label) },
                                     onClick = {
-                                        viewModel.saveCurrencyPreference(symbol)
+                                        prefsViewModel.saveCurrencyPreference(symbol)
                                         isCurrencyDropdownExpanded = false
                                     }
                                 )
@@ -467,7 +471,8 @@ fun SettingsScreen(
                     confirmButton = {
                         TextButton(
                             onClick = {
-                                viewModel.deleteAllData()
+                                expenseViewModel.deleteAllData()
+                                budgetViewModel.resetBudget()
                                 showDeleteDialog = false
                                 Toast.makeText(context, "All data wiped", Toast.LENGTH_SHORT).show()
                             }

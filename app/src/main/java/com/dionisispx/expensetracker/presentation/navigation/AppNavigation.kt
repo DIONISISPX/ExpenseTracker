@@ -34,7 +34,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
-import com.dionisispx.expensetracker.presentation.SharedViewModel
+import com.dionisispx.expensetracker.presentation.PreferencesViewModel
 import com.dionisispx.expensetracker.presentation.add_expense.AddExpenseScreen
 import com.dionisispx.expensetracker.presentation.home.HomeScreen
 import com.dionisispx.expensetracker.presentation.budget.BudgetSettingsScreen
@@ -45,8 +45,8 @@ import com.dionisispx.expensetracker.presentation.onboarding.OnboardingBudgetScr
 
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
-    val viewModel: SharedViewModel = hiltViewModel()
-    val isFirstRun by viewModel.isFirstRun.collectAsState()
+    val prefsViewModel: PreferencesViewModel = hiltViewModel()
+    val isFirstRun by prefsViewModel.isFirstRun.collectAsState()
 
     if (isFirstRun == null) {
         return // Wait for preference to load
@@ -184,7 +184,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 OnboardingWelcomeScreen(
                     onNextClick = { navController.navigate(Screen.OnboardingPrefs.route) },
                     onSkipClick = {
-                        viewModel.setFirstRunCompleted()
+                        prefsViewModel.setFirstRunCompleted()
                         navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.OnboardingWelcome.route) { inclusive = true }
                         }
@@ -193,11 +193,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
             }
             composable(Screen.OnboardingPrefs.route) {
                 OnboardingPrefsScreen(
-                    viewModel = viewModel,
                     onBackClick = { navController.popBackStack() },
                     onNextClick = { navController.navigate(Screen.OnboardingBudget.route) },
                     onSkipClick = {
-                        viewModel.setFirstRunCompleted()
+                        prefsViewModel.setFirstRunCompleted()
                         navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.OnboardingWelcome.route) { inclusive = true }
                         }
@@ -206,17 +205,16 @@ fun MainScreen(modifier: Modifier = Modifier) {
             }
             composable(Screen.OnboardingBudget.route) {
                 OnboardingBudgetScreen(
-                    viewModel = viewModel,
                     onBackClick = { navController.popBackStack() },
                     onSetCategoryLimitsClick = { navController.navigate(Screen.OnboardingBudgetDetailed.route) },
                     onDoneClick = {
-                        viewModel.setFirstRunCompleted()
+                        prefsViewModel.setFirstRunCompleted()
                         navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.OnboardingWelcome.route) { inclusive = true }
                         }
                     },
                     onSkipClick = {
-                        viewModel.setFirstRunCompleted()
+                        prefsViewModel.setFirstRunCompleted()
                         navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.OnboardingWelcome.route) { inclusive = true }
                         }
@@ -225,8 +223,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             }
             composable(Screen.OnboardingBudgetDetailed.route) {
                 BudgetSettingsScreen(
-                    onNavigateBack = { navController.popBackStack() },
-                    viewModel = viewModel
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
         }

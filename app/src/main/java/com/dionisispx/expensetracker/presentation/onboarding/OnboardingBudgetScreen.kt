@@ -41,21 +41,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dionisispx.expensetracker.R
-import com.dionisispx.expensetracker.presentation.SharedViewModel
+import com.dionisispx.expensetracker.presentation.BudgetViewModel
+import com.dionisispx.expensetracker.presentation.PreferencesViewModel
 import com.dionisispx.expensetracker.presentation.budget.MinimalistIntegerInput
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OnboardingBudgetScreen(
-    viewModel: SharedViewModel,
+    budgetViewModel: BudgetViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+    prefsViewModel: PreferencesViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
     onBackClick: () -> Unit,
     onSetCategoryLimitsClick: () -> Unit,
     onDoneClick: () -> Unit,
     onSkipClick: () -> Unit
 ) {
-    val savedTotalBudget by viewModel.totalBudget.collectAsState()
-    val savedCategoryLimits by viewModel.categoryLimits.collectAsState()
-    val currencySymbol by viewModel.currencyPreference.collectAsState()
+    val savedTotalBudget by budgetViewModel.totalBudget.collectAsState()
+    val savedCategoryLimits by budgetViewModel.categoryLimits.collectAsState()
+    val currencySymbol by prefsViewModel.currencyPreference.collectAsState()
 
     var overallBudgetInput by remember { mutableStateOf("") }
     var isInitialized by remember { mutableStateOf(false) }
@@ -139,7 +141,7 @@ fun OnboardingBudgetScreen(
             Button(
                 onClick = { 
                     val budgetValue = overallBudgetInput.toIntOrNull() ?: savedTotalBudget
-                    viewModel.saveBudgetAndLimits(budgetValue, savedCategoryLimits)
+                    budgetViewModel.saveBudgetAndLimits(budgetValue, savedCategoryLimits)
                     onSetCategoryLimitsClick() 
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -168,7 +170,7 @@ fun OnboardingBudgetScreen(
                 Button(
                     onClick = {
                         val budgetValue = overallBudgetInput.toIntOrNull() ?: savedTotalBudget
-                        viewModel.saveBudgetAndLimits(budgetValue, savedCategoryLimits)
+                        budgetViewModel.saveBudgetAndLimits(budgetValue, savedCategoryLimits)
                         onDoneClick()
                     },
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp, vertical = 12.dp)

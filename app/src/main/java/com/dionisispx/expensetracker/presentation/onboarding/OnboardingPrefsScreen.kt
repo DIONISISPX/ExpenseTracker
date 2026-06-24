@@ -43,19 +43,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dionisispx.expensetracker.R
-import com.dionisispx.expensetracker.presentation.SharedViewModel
+import com.dionisispx.expensetracker.presentation.PreferencesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OnboardingPrefsScreen(
-    viewModel: SharedViewModel,
+    prefsViewModel: PreferencesViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
     onBackClick: () -> Unit,
     onNextClick: () -> Unit,
     onSkipClick: () -> Unit
 ) {
-    val language by viewModel.languagePreference.collectAsState()
-    val currency by viewModel.currencyPreference.collectAsState()
-    val theme by viewModel.themePreference.collectAsState()
+    val language by prefsViewModel.languagePreference.collectAsState()
+    val currency by prefsViewModel.currencyPreference.collectAsState()
+    val theme by prefsViewModel.themePreference.collectAsState()
 
     var isLanguageDropdownExpanded by remember { mutableStateOf(false) }
     var isCurrencyDropdownExpanded by remember { mutableStateOf(false) }
@@ -163,7 +163,7 @@ fun OnboardingPrefsScreen(
                                 text = { Text(label) },
                                 onClick = {
                                     if (language != value) {
-                                        viewModel.saveLanguagePreference(value)
+                                        prefsViewModel.saveLanguagePreference(value)
                                     }
                                     isLanguageDropdownExpanded = false
                                 }
@@ -205,7 +205,7 @@ fun OnboardingPrefsScreen(
                             DropdownMenuItem(
                                 text = { Text(label) },
                                 onClick = {
-                                    viewModel.saveCurrencyPreference(symbol)
+                                    prefsViewModel.saveCurrencyPreference(symbol)
                                     isCurrencyDropdownExpanded = false
                                 }
                             )
@@ -246,7 +246,7 @@ fun OnboardingPrefsScreen(
                             DropdownMenuItem(
                                 text = { Text(label) },
                                 onClick = {
-                                    viewModel.saveThemePreference(value)
+                                    prefsViewModel.saveThemePreference(value)
                                     isThemeDropdownExpanded = false
                                 }
                             )

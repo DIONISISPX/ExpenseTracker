@@ -35,7 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dionisispx.expensetracker.R
-import com.dionisispx.expensetracker.presentation.SharedViewModel
+import com.dionisispx.expensetracker.presentation.ExpenseViewModel
+import com.dionisispx.expensetracker.presentation.PreferencesViewModel
 import com.dionisispx.expensetracker.presentation.add_expense.components.CameraUI
 import com.dionisispx.expensetracker.presentation.add_expense.components.ManualExpenseForm
 
@@ -44,7 +45,8 @@ import com.dionisispx.expensetracker.presentation.add_expense.components.ManualE
 fun AddExpenseScreen(
     onNavigateBack: () -> Unit,
     addSharedViewModel: AddSharedViewModel = hiltViewModel(),
-    expenseViewModel: SharedViewModel = hiltViewModel()
+    expenseViewModel: ExpenseViewModel = hiltViewModel(),
+    prefsViewModel: PreferencesViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
 
@@ -67,7 +69,7 @@ fun AddExpenseScreen(
     val isProcessing by addSharedViewModel.isProcessing.collectAsState()
 
     // Fetch currency preference
-    val currencyPreference by expenseViewModel.currencyPreference.collectAsState()
+    val currencyPreference by prefsViewModel.currencyPreference.collectAsState()
 
     val tabs = listOf(
         stringResource(R.string.tab_camera),
@@ -127,7 +129,7 @@ fun AddExpenseScreen(
                         onCategoryChange = { addSharedViewModel.updateCategory(it) },
                         currencySymbol = currencyPreference,
                         onNavigateBack = onNavigateBack,
-                        viewModel = expenseViewModel
+                        onSaveExpense = { expenseViewModel.addExpense(it) }
                     )
                 } else if (selectedTab == 0) {
                     CameraUI(
@@ -146,7 +148,7 @@ fun AddExpenseScreen(
                         onCategoryChange = { addSharedViewModel.updateCategory(it) },
                         currencySymbol = currencyPreference,
                         onNavigateBack = onNavigateBack,
-                        viewModel = expenseViewModel
+                        onSaveExpense = { expenseViewModel.addExpense(it) }
                     )
                 }
             }

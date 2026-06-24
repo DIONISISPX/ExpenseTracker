@@ -31,7 +31,7 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.unit.dp
 import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.domain.model.Expense
-import com.dionisispx.expensetracker.presentation.SharedViewModel
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,7 +41,7 @@ fun ManualExpenseForm(
     category: String, onCategoryChange: (String) -> Unit,
     currencySymbol: String,
     onNavigateBack: () -> Unit,
-    viewModel: SharedViewModel
+    onSaveExpense: (Expense) -> Unit
 ) {
     var isDropdownExpanded by remember { mutableStateOf(false) }
     val categories = listOf(
@@ -129,7 +129,7 @@ fun ManualExpenseForm(
                         category = category,
                         date = System.currentTimeMillis()
                     )
-                    viewModel.addExpense(newExpense)
+                    onSaveExpense(newExpense)
                     onNavigateBack()
                 }
             }

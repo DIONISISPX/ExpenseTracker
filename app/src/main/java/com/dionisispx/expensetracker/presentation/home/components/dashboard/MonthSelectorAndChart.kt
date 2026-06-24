@@ -34,7 +34,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.dionisispx.expensetracker.domain.model.Expense
-import com.dionisispx.expensetracker.presentation.SharedViewModel
+import com.dionisispx.expensetracker.presentation.ExpenseViewModel
 import com.dionisispx.expensetracker.presentation.home.components.charts.DonutChart
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -47,7 +47,7 @@ fun MonthSelectorAndChart(
     totalBudget: Float,
     currencyPreference: String,
     languagePreference: String,
-    viewModel: SharedViewModel
+    viewModel: ExpenseViewModel
 ) {
     var swipeOffset by remember { mutableFloatStateOf(0f) }
     val formatter = remember(languagePreference) { DateTimeFormatter.ofPattern("LLLL yyyy", Locale(languagePreference)) }

@@ -14,7 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.dionisispx.expensetracker.domain.model.Expense
-import com.dionisispx.expensetracker.presentation.SharedViewModel
+
 import com.dionisispx.expensetracker.presentation.home.components.ExpenseItem
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -25,7 +25,7 @@ fun SubTabPager(
     categoryLimits: Map<String, Float>,
     totalBudget: Float,
     currencyPreference: String,
-    viewModel: SharedViewModel
+    onDeleteExpense: (Expense) -> Unit
 ) {
     HorizontalPager(
         state = pagerState,
@@ -40,7 +40,7 @@ fun SubTabPager(
                     ExpenseItem(
                         expense = expense,
                         currencySymbol = currencyPreference,
-                        onDeleteClick = { viewModel.deleteExpense(it) }
+                        onDeleteClick = { onDeleteExpense(it) }
                     )
                 }
             }

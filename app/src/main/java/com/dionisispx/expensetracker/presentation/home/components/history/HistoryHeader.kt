@@ -16,16 +16,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.dionisispx.expensetracker.presentation.SharedViewModel
+
 
 @Composable
-fun HistoryHeader(currentYear: Int, viewModel: SharedViewModel) {
+fun HistoryHeader(
+    currentYear: Int,
+    onPreviousYearClick: () -> Unit,
+    onNextYearClick: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = { viewModel.previousYear() }) {
+        IconButton(onClick = onPreviousYearClick) {
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Prev Year")
         }
         Text(
@@ -33,7 +37,7 @@ fun HistoryHeader(currentYear: Int, viewModel: SharedViewModel) {
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.titleLarge
         )
-        IconButton(onClick = { viewModel.nextYear() }) {
+        IconButton(onClick = onNextYearClick) {
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next Year")
         }
     }

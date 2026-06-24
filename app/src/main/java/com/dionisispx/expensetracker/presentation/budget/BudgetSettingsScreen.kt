@@ -61,7 +61,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dionisispx.expensetracker.R
-import com.dionisispx.expensetracker.presentation.SharedViewModel
+import com.dionisispx.expensetracker.presentation.BudgetViewModel
+import com.dionisispx.expensetracker.presentation.PreferencesViewModel
 import com.dionisispx.expensetracker.presentation.util.getCategoryDetails
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -70,12 +71,13 @@ import kotlin.math.roundToInt
 @Composable
 fun BudgetSettingsScreen(
     onNavigateBack: () -> Unit,
-    viewModel: SharedViewModel = hiltViewModel()
+    budgetViewModel: BudgetViewModel = hiltViewModel(),
+    prefsViewModel: PreferencesViewModel = hiltViewModel()
 ) {
     // Observe database values
-    val savedTotalBudget by viewModel.totalBudget.collectAsState()
-    val savedCategoryLimits by viewModel.categoryLimits.collectAsState()
-    val currencySymbol by viewModel.currencyPreference.collectAsState()
+    val savedTotalBudget by budgetViewModel.totalBudget.collectAsState()
+    val savedCategoryLimits by budgetViewModel.categoryLimits.collectAsState()
+    val currencySymbol by prefsViewModel.currencyPreference.collectAsState()
 
     // Local state variables for input handling
     var overallBudgetInput by remember { mutableStateOf("") }
@@ -136,7 +138,7 @@ fun BudgetSettingsScreen(
                 actions = {
                     TextButton(
                         onClick = {
-                            viewModel.saveBudgetAndLimits(overallBudget.toInt(), categoryLimits)
+                            budgetViewModel.saveBudgetAndLimits(overallBudget.toInt(), categoryLimits)
                             onNavigateBack()
                         },
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
