@@ -13,13 +13,3 @@ interface VisionApi {
         @Body request: VisionRequest
     ): VisionResponse
 }
-
-object VisionNetwork {
-    val api: VisionApi by lazy {
-        Retrofit.Builder()
-            .baseUrl("https://vision.googleapis.com/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(VisionApi::class.java)
-    }
-}

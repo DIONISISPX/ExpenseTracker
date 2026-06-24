@@ -34,8 +34,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.domain.model.Expense
+import com.dionisispx.expensetracker.presentation.util.CurrencyUtils
 import com.dionisispx.expensetracker.presentation.util.getCategoryDetails
-import java.util.Locale
+import com.dionisispx.expensetracker.presentation.util.getLocalizedCategoryName
+import java.time.Instant
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -46,8 +48,7 @@ fun ExpenseItem(
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    val formattedAmount = String.format(Locale.US, "%.2f", expense.amount)
-    val expenseText = if (currencySymbol == "$") "- $$formattedAmount" else "- $formattedAmount $currencySymbol"
+    val expenseText = "- " + CurrencyUtils.formatCurrency(expense.amount.toFloat(), currencySymbol)
 
     // Evaluate string resources outside the dialog to prevent context reset
     val dialogTitle = stringResource(R.string.delete_expense_title)
@@ -98,21 +99,7 @@ fun ExpenseItem(
                     fontWeight = FontWeight.Bold
                 )
 
-                val localizedCategory = when (expense.category) {
-                    "Groceries" -> stringResource(R.string.cat_groceries)
-                    "Food & Drink" -> stringResource(R.string.cat_food_drink)
-                    "Transport & Fuel" -> stringResource(R.string.cat_transport)
-                    "Shopping" -> stringResource(R.string.cat_shopping)
-                    "Entertainment" -> stringResource(R.string.cat_entertainment)
-                    "Bills & Utilities" -> stringResource(R.string.cat_bills)
-                    "Health & Fitness" -> stringResource(R.string.cat_health)
-                    "Travel" -> stringResource(R.string.cat_travel)
-                    "Home" -> stringResource(R.string.cat_home)
-                    "Education" -> stringResource(R.string.cat_education)
-                    "Personal Care" -> stringResource(R.string.cat_personal)
-                    "Other" -> stringResource(R.string.cat_other)
-                    else -> expense.category
-                }
+                val localizedCategory = getLocalizedCategoryName(expense.category)
 
                 Text(
                     text = localizedCategory,

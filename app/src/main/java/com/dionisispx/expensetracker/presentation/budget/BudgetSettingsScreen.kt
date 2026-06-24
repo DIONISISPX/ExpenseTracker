@@ -62,8 +62,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.presentation.BudgetViewModel
+import com.dionisispx.expensetracker.domain.model.Expense
+import com.dionisispx.expensetracker.presentation.util.CurrencyUtils
 import com.dionisispx.expensetracker.presentation.PreferencesViewModel
 import com.dionisispx.expensetracker.presentation.util.getCategoryDetails
+import com.dionisispx.expensetracker.presentation.util.getLocalizedCategoryName
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -107,21 +110,7 @@ fun BudgetSettingsScreen(
         "Entertainment", "Bills & Utilities", "Health & Fitness",
         "Travel", "Home", "Education", "Personal Care", "Other"
     ).map { categoryName ->
-        val localizedName = when (categoryName) {
-            "Groceries" -> stringResource(R.string.cat_groceries)
-            "Food & Drink" -> stringResource(R.string.cat_food_drink)
-            "Transport & Fuel" -> stringResource(R.string.cat_transport)
-            "Shopping" -> stringResource(R.string.cat_shopping)
-            "Entertainment" -> stringResource(R.string.cat_entertainment)
-            "Bills & Utilities" -> stringResource(R.string.cat_bills)
-            "Health & Fitness" -> stringResource(R.string.cat_health)
-            "Travel" -> stringResource(R.string.cat_travel)
-            "Home" -> stringResource(R.string.cat_home)
-            "Education" -> stringResource(R.string.cat_education)
-            "Personal Care" -> stringResource(R.string.cat_personal)
-            "Other" -> stringResource(R.string.cat_other)
-            else -> categoryName
-        }
+        val localizedName = getLocalizedCategoryName(categoryName)
         val details = getCategoryDetails(categoryName)
         CategoryData(categoryName, localizedName, details.first, details.second)
     }
@@ -266,11 +255,7 @@ fun BudgetSettingsScreen(
                             val pct = if (overallBudget > 0f) (remainingEur / overallBudget) * 100f else 0f
                             stringResource(R.string.remaining) + ": ${String.format(Locale.US, "%.0f", pct)}%"
                         } else {
-                            if (currencySymbol == "$") {
-                                stringResource(R.string.remaining) + ": $${String.format(Locale.US, "%.0f", remainingEur)}"
-                            } else {
-                                stringResource(R.string.remaining) + ": ${String.format(Locale.US, "%.0f", remainingEur)} $currencySymbol"
-                            }
+                            stringResource(R.string.remaining) + ": " + CurrencyUtils.formatCurrencyNoDecimals(remainingEur, currencySymbol)
                         }
 
                         Text(

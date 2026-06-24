@@ -1,6 +1,9 @@
 package com.dionisispx.expensetracker.presentation.util
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.dionisispx.expensetracker.R
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Flight
@@ -31,4 +34,23 @@ fun getCategoryDetails(category: String): Pair<ImageVector, Color> {
         "Personal Care" -> Icons.Default.Spa to Color(0xFFF06292)
         else -> Icons.Default.MoreHoriz to Color(0xFF90A4AE)
     }
+}
+
+@Composable
+fun getLocalizedCategoryName(category: String): String {
+    val resId = when (category) {
+        "Groceries" -> R.string.cat_groceries
+        "Food & Drink" -> R.string.cat_food_drink
+        "Transport & Fuel" -> R.string.cat_transport
+        "Shopping" -> R.string.cat_shopping
+        "Entertainment" -> R.string.cat_entertainment
+        "Bills & Utilities" -> R.string.cat_bills
+        "Health & Fitness" -> R.string.cat_health
+        "Travel" -> R.string.cat_travel
+        "Home" -> R.string.cat_home
+        "Education" -> R.string.cat_education
+        "Personal Care" -> R.string.cat_personal
+        else -> R.string.cat_other
+    }
+    return stringResource(resId)
 }

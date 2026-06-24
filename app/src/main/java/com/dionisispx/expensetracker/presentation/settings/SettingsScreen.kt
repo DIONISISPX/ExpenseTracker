@@ -491,6 +491,18 @@ fun SettingsScreen(
     }
 }
 
+// Helper function to escape CSV fields
+private fun escapeCsvField(field: String): String {
+    var escaped = field
+    if (escaped.contains("\"")) {
+        escaped = escaped.replace("\"", "\"\"")
+    }
+    if (escaped.contains(",") || escaped.contains("\"") || escaped.contains("\n")) {
+        escaped = "\"$escaped\""
+    }
+    return escaped
+}
+
 // Function to build csv string content
 private fun generateCsvContent(expenses: List<Expense>, currency: String): String {
     val sb = StringBuilder()
@@ -500,7 +512,9 @@ private fun generateCsvContent(expenses: List<Expense>, currency: String): Strin
 
     expenses.forEach { expense ->
         val dateString = dateFormat.format(Date(expense.date))
-        sb.append("${expense.storeName},${expense.category},${expense.amount},$dateString\n")
+        val store = escapeCsvField(expense.storeName)
+        val category = escapeCsvField(expense.category)
+        sb.append("$store,$category,${expense.amount},$dateString\n")
     }
     return sb.toString()
 }

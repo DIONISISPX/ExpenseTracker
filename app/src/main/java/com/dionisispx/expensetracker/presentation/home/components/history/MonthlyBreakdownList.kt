@@ -17,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.dionisispx.expensetracker.R
+import com.dionisispx.expensetracker.presentation.util.CurrencyUtils
 import java.util.Locale
 
 @Composable
@@ -48,14 +49,13 @@ fun MonthlyBreakdownList(
                     totalSpent
                 }
                 
-                val formattedAmount = String.format(Locale.US, "%.2f", displayAmount)
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(fullMonths[index])
                     Text(
-                        text = if (currencyPreference == "$") "$$formattedAmount" else "$formattedAmount $currencyPreference",
+                        text = CurrencyUtils.formatCurrency(displayAmount, currencyPreference),
                         fontWeight = if (totalSpent > 0f) FontWeight.Bold else FontWeight.Normal,
                         color = when {
                             isOverBudget -> MaterialTheme.colorScheme.error

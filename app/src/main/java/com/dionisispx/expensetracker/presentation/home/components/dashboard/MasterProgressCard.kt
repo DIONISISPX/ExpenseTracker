@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.domain.model.Expense
+import com.dionisispx.expensetracker.presentation.util.CurrencyUtils
 import java.util.Locale
 
 @Composable
@@ -34,8 +35,8 @@ fun MasterProgressCard(expenses: List<Expense>, totalBudget: Float, currencySymb
     val isOverBudget = totalSpent > totalBudget
     val remaining = (totalBudget - totalSpent).coerceAtLeast(0f)
 
-    val formattedSpent = String.format(Locale.US, "%.2f", totalSpent)
-    val formattedRemaining = String.format(Locale.US, "%.2f", remaining)
+    val formattedSpent = CurrencyUtils.formatCurrency(totalSpent, currencySymbol)
+    val formattedRemaining = CurrencyUtils.formatCurrency(remaining, currencySymbol)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -56,7 +57,7 @@ fun MasterProgressCard(expenses: List<Expense>, totalBudget: Float, currencySymb
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
                     Text(
-                        text = if (currencySymbol == "$") "$$formattedSpent" else "$formattedSpent $currencySymbol",
+                        text = formattedSpent,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -69,7 +70,7 @@ fun MasterProgressCard(expenses: List<Expense>, totalBudget: Float, currencySymb
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
                     Text(
-                        text = if (currencySymbol == "$") "$$formattedRemaining" else "$formattedRemaining $currencySymbol",
+                        text = formattedRemaining,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (isOverBudget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onPrimaryContainer

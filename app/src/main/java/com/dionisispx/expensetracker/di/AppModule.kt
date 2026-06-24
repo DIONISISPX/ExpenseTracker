@@ -59,5 +59,15 @@ abstract class AppModule {
         fun provideExpenseDao(db: ExpenseDatabase): ExpenseDao {
             return db.dao
         }
+
+        @Provides
+        @Singleton
+        fun provideVisionApi(): com.dionisispx.expensetracker.data.remote.VisionApi {
+            return retrofit2.Retrofit.Builder()
+                .baseUrl("https://vision.googleapis.com/")
+                .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create())
+                .build()
+                .create(com.dionisispx.expensetracker.data.remote.VisionApi::class.java)
+        }
     }
 }

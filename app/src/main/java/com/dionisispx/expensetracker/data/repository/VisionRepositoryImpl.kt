@@ -5,12 +5,14 @@ import com.dionisispx.expensetracker.BuildConfig
 import com.dionisispx.expensetracker.data.remote.AnnotateImageRequest
 import com.dionisispx.expensetracker.data.remote.Feature
 import com.dionisispx.expensetracker.data.remote.VisionImage
-import com.dionisispx.expensetracker.data.remote.VisionNetwork
+import com.dionisispx.expensetracker.data.remote.VisionApi
 import com.dionisispx.expensetracker.data.remote.VisionRequest
 import com.dionisispx.expensetracker.domain.repository.VisionRepository
 import javax.inject.Inject
 
-class VisionRepositoryImpl @Inject constructor() : VisionRepository {
+class VisionRepositoryImpl @Inject constructor(
+    private val visionApi: VisionApi
+) : VisionRepository {
 
     override suspend fun extractTextFromImage(base64Image: String): Result<String> {
         return try {
@@ -26,7 +28,7 @@ class VisionRepositoryImpl @Inject constructor() : VisionRepository {
             val apiKey = BuildConfig.VISION_API_KEY
 
             Log.d("CloudVision", "Uploading image to Google Vision API...")
-            val response = VisionNetwork.api.annotateImage(apiKey, request)
+            val response = visionApi.annotateImage(apiKey, request)
 
             val extractedText = response.responses?.firstOrNull()?.textAnnotations?.firstOrNull()?.description ?: ""
             

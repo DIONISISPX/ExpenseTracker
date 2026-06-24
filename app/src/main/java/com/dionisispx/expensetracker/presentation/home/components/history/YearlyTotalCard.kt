@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.domain.model.Expense
+import com.dionisispx.expensetracker.presentation.util.CurrencyUtils
 import java.util.Locale
 
 @Composable
@@ -34,7 +35,7 @@ fun YearlyTotalCard(
         yearlySpent
     }
 
-    val formattedAmount = String.format(Locale.US, "%.2f", displayAmount)
+
 
     Card(
         modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -56,7 +57,7 @@ fun YearlyTotalCard(
                 color = if (isOverBudget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = if (currencyPreference == "$") "$$formattedAmount" else "$formattedAmount $currencyPreference",
+                text = CurrencyUtils.formatCurrency(displayAmount, currencyPreference),
                 fontWeight = FontWeight.Bold,
                 color = if (isOverBudget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
             )

@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dionisispx.expensetracker.R
+import com.dionisispx.expensetracker.presentation.util.CurrencyUtils
 import com.dionisispx.expensetracker.domain.model.Expense
 import com.dionisispx.expensetracker.presentation.util.getCategoryDetails
 import java.util.Locale
@@ -81,7 +82,7 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
                 val remaining = (totalBudget - totalSpent).coerceAtLeast(0f)
                 val isOver = totalSpent > totalBudget
                 val centerValue = if (isOver) totalSpent - totalBudget else remaining
-                val formattedValue = String.format(Locale.US, "%.2f", centerValue)
+
 
                 Text(
                     text = if (isOver) stringResource(R.string.over_budget) else stringResource(R.string.remaining),
@@ -90,22 +91,22 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = if (currencySymbol == "$") "$$formattedValue" else "$formattedValue $currencySymbol",
+                    text = CurrencyUtils.formatCurrency(centerValue, currencySymbol),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = if (isOver) Color.Red else MaterialTheme.colorScheme.onSurface
                 )
             } else {
-                val formattedSpent = String.format(Locale.US, "%.2f", totalSpent)
                 Text(
                     text = stringResource(R.string.spent),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = if (currencySymbol == "$") "$$formattedSpent" else "$formattedSpent $currencySymbol",
+                    text = CurrencyUtils.formatCurrency(totalSpent, currencySymbol),
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }

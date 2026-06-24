@@ -1,7 +1,6 @@
 package com.dionisispx.expensetracker.domain.usecase
 
 import com.dionisispx.expensetracker.domain.model.ReceiptData
-import java.util.Locale
 import javax.inject.Inject
 
 
