@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Spa
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 
+// Get icon and color pair for a given expense category
 fun getCategoryDetails(category: ExpenseCategory): Pair<ImageVector, Color> {
     return when (category) {
         ExpenseCategory.GROCERIES -> Icons.Default.ShoppingCart to Color(0xFF81C784)
@@ -39,6 +40,7 @@ fun getCategoryDetails(category: ExpenseCategory): Pair<ImageVector, Color> {
 }
 
 @Composable
+// Get localized string representation of an expense category
 fun getLocalizedCategoryName(category: ExpenseCategory): String {
     val resId = when (category) {
         ExpenseCategory.GROCERIES -> R.string.cat_groceries

@@ -15,19 +15,19 @@ class PriceExtractor @Inject constructor(
     // Matches prices with euro symbol
     private val euroPriceRegex = Regex("€\\s*(\\d+\\s*[.,]\\s*\\d{2})(?!\\d)")
 
-    // Matches greek total keyword
+    // Matches Greek total keyword
     private val greekTotalRegex = Regex("[ΣS][ΥYU][ΝN][ΟO0][ΛL][ΟO0]")
 
-    // Matches greek subtotal keyword
+    // Matches Greek subtotal keyword
     private val greekSubtotalRegex = Regex("[ΜM][ΕE][ΡRP][ΙI][ΚK][ΟO0]")
 
-    // Matches english total keyword
+    // Matches English total keyword
     private val totalLatinRegex = Regex("\\bTOTAL\\b")
 
-    // Matches english subtotal keyword
+    // Matches English subtotal keyword
     private val subtotalLatinRegex = Regex("\\b(SUBTOTAL|SUB\\s*TOTAL)\\b")
 
-    // Matches greek payable keyword
+    // Matches Greek payable keyword
     private val payableRegex = Regex("ΠΛΗΡΩΤ[ΕE][ΟO0]")
 
     // Words indicating payment methods
@@ -56,7 +56,7 @@ class PriceExtractor @Inject constructor(
         val totalPrices = mutableListOf<Double>()
         val subtotalPrices = mutableListOf<Double>()
 
-        // Scan lines for total and subtotal keywords
+        // 1. Scan lines for total and subtotal keywords
         for (i in lines.indices) {
             val stripped = normalizer.stripGreekAccents(lines[i])
             if (paymentKeywords.any { stripped.contains(it) }) continue
@@ -74,12 +74,12 @@ class PriceExtractor @Inject constructor(
             }
         }
 
-        // Return highest total price found
+        // 2. Return highest total price found
         if (totalPrices.isNotEmpty()) {
             return formatPrice(totalPrices.maxOrNull()!!)
         }
         
-        // Return highest subtotal price found
+        // 3. Return highest subtotal price found
         if (subtotalPrices.isNotEmpty()) {
             return formatPrice(subtotalPrices.maxOrNull()!!)
         }
@@ -121,7 +121,7 @@ class PriceExtractor @Inject constructor(
 
         val prices = mutableListOf<PriceEntry>()
 
-        // Collect all valid prices
+        // 1. Collect all valid prices
         for (i in lines.indices) {
             val line = lines[i]
             val stripped = normalizer.stripGreekAccents(line)
@@ -141,7 +141,7 @@ class PriceExtractor @Inject constructor(
         val bottomHalfStart = lines.size / 2
         val bottomPrices = prices.filter { it.lineIndex >= bottomHalfStart }
 
-        // Find frequently repeated amounts in bottom half
+        // 2. Find frequently repeated amounts in bottom half
         val duplicateGroup = bottomPrices
             .groupBy { roundCents(it.amount) }
             .filter { it.value.size >= 2 }
@@ -151,7 +151,7 @@ class PriceExtractor @Inject constructor(
             return formatPrice(duplicateGroup.key)
         }
 
-        // Check for cash tendered pattern
+        // 3. Check for cash tendered pattern
         for (j in 0..prices.size - 3) {
             val a = prices[j].amount
             val b = prices[j+1].amount
@@ -161,12 +161,12 @@ class PriceExtractor @Inject constructor(
             }
         }
 
-        // Fallback to the highest price in bottom half
+        // 4. Fallback to the highest price in bottom half
         val best = (bottomPrices.ifEmpty { prices }).maxByOrNull { it.amount }
         return if (best != null) formatPrice(best.amount) else ""
     }
 
-    // Checks if number is a standard greek tax rate
+    // Checks if number is a standard Greek tax rate
     private fun isVatRate(num: Double): Boolean {
         return doublesEqual(num, 6.0) || doublesEqual(num, 13.0) || doublesEqual(num, 24.0)
     }

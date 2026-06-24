@@ -45,6 +45,7 @@ import com.dionisispx.expensetracker.presentation.budget.BudgetViewModel
 import com.dionisispx.expensetracker.presentation.preferences.PreferencesViewModel
 import com.dionisispx.expensetracker.presentation.budget.MinimalistIntegerInput
 
+// Displays the onboarding screen for setting up the initial budget
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OnboardingBudgetScreen(
@@ -62,6 +63,7 @@ fun OnboardingBudgetScreen(
     var overallBudgetInput by remember { mutableStateOf("") }
     var isInitialized by remember { mutableStateOf(false) }
 
+    // Initialize input fields with saved values
     LaunchedEffect(savedTotalBudget) {
         if (!isInitialized && savedTotalBudget > 0) {
             overallBudgetInput = savedTotalBudget.toString()
@@ -138,6 +140,7 @@ fun OnboardingBudgetScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
+            // Navigate to category limits setup
             Button(
                 onClick = { 
                     val budgetValue = overallBudgetInput.toIntOrNull() ?: savedTotalBudget
@@ -167,6 +170,7 @@ fun OnboardingBudgetScreen(
                     Text(text = stringResource(R.string.skip), fontSize = 16.sp)
                 }
 
+                // Save budget and finish onboarding
                 Button(
                     onClick = {
                         val budgetValue = overallBudgetInput.toIntOrNull() ?: savedTotalBudget

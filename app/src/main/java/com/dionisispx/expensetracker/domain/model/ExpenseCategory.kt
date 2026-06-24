@@ -1,5 +1,6 @@
 package com.dionisispx.expensetracker.domain.model
 
+// Represents a category for an expense
 enum class ExpenseCategory(val displayName: String) {
     GROCERIES("Groceries"),
     FOOD_DRINK("Food & Drink"),
@@ -15,6 +16,7 @@ enum class ExpenseCategory(val displayName: String) {
     OTHER("Other");
 
     companion object {
+        // Finds an expense category by its display name
         fun fromDisplayName(name: String): ExpenseCategory {
             return entries.find { it.displayName == name } ?: OTHER
         }

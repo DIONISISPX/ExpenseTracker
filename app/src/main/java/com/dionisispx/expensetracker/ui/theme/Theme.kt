@@ -32,6 +32,7 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+// Main theme configuration for the application
 @Composable
 fun ExpenseTrackerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

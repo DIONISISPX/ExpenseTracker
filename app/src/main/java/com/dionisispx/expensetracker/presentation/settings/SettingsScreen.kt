@@ -64,6 +64,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+// Displays the application settings screen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -113,7 +114,7 @@ fun SettingsScreen(
         else -> stringResource(R.string.currency_euro)
     }
 
-    // Android file picker launcher to save csv data
+    // Launcher for exporting CSV data
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv"),
         onResult = { uri ->
@@ -161,7 +162,7 @@ fun SettingsScreen(
                 modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
             )
 
-            // Card for budget limits navigation
+            // Navigation card for budget limits
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -199,7 +200,7 @@ fun SettingsScreen(
                 }
             }
 
-            // Card for application theme selection
+            // Theme selection card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -261,7 +262,7 @@ fun SettingsScreen(
                 }
             }
 
-            // Card for language selection
+            // Language selection card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -325,7 +326,7 @@ fun SettingsScreen(
                 }
             }
 
-            // Card for currency symbol selection
+            // Currency selection card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -396,7 +397,7 @@ fun SettingsScreen(
                 modifier = Modifier.padding(start = 8.dp, bottom = 4.dp, top = 8.dp)
             )
 
-            // Card for csv export action
+            // CSV export action card
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -426,7 +427,7 @@ fun SettingsScreen(
                 }
             }
 
-            // Card for wiping all database data
+            // Database data wipe action card
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -491,7 +492,7 @@ fun SettingsScreen(
     }
 }
 
-// Helper function to escape CSV fields
+// Escapes CSV fields
 private fun escapeCsvField(field: String): String {
     var escaped = field
     if (escaped.contains("\"")) {
@@ -503,7 +504,7 @@ private fun escapeCsvField(field: String): String {
     return escaped
 }
 
-// Function to build csv string content
+// Generates CSV content from the list of expenses
 private fun generateCsvContent(expenses: List<Expense>, currency: String): String {
     val sb = StringBuilder()
     sb.append("Store,Category,Amount ($currency),Date\n")

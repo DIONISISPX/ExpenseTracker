@@ -24,7 +24,7 @@ import java.util.Locale
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge() // Draw app underneath navigation/status bar
+        enableEdgeToEdge() // Draws app underneath navigation and status bar
         setContent {
             val viewModel: PreferencesViewModel = hiltViewModel()
             val themePreference by viewModel.themePreference.collectAsState()
@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
             
             val currentConfig = LocalConfiguration.current
             
-            // Create localized configuration
+            // Creates localized configuration
             val localizedConfig = remember(locale, currentConfig) {
                 Configuration(currentConfig).apply {
                     setLocale(locale)
@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            // Use context wrapper to override resources while keeping activity context to prevent hilt crashes
+            // Uses context wrapper to override resources and prevent Hilt crashes
             val localizedContext = remember(context, localizedConfig) {
                 object : ContextWrapper(context) {
                     private val localizedResources = context.createConfigurationContext(localizedConfig).resources

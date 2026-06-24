@@ -37,8 +37,8 @@ import com.dionisispx.expensetracker.domain.model.Expense
 import com.dionisispx.expensetracker.presentation.util.CurrencyUtils
 import com.dionisispx.expensetracker.presentation.util.getCategoryDetails
 import com.dionisispx.expensetracker.presentation.util.getLocalizedCategoryName
-import java.time.Instant
 
+// Composable for displaying an individual expense item
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ExpenseItem(
@@ -50,7 +50,7 @@ fun ExpenseItem(
 
     val expenseText = "- " + CurrencyUtils.formatCurrency(expense.amount.toFloat(), currencySymbol)
 
-    // Evaluate string resources outside the dialog to prevent context reset
+    // Pre-evaluate strings to prevent context reset
     val dialogTitle = stringResource(R.string.delete_expense_title)
     val dialogMessage = stringResource(R.string.delete_expense_message, expense.storeName)
     val btnDelete = stringResource(R.string.delete)
@@ -58,7 +58,7 @@ fun ExpenseItem(
 
     val (icon, bgColor) = getCategoryDetails(expense.category)
 
-    // Check luminance of the app background to guarantee pure white in light mode
+    // Check background luminance to set icon tint
     val isAppDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val iconTint = if (isAppDark) MaterialTheme.colorScheme.surfaceVariant else Color.White
 
@@ -76,7 +76,7 @@ fun ExpenseItem(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Box ensures absolute explicit control over the tint
+            // Box ensures explicit control over tint
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -116,6 +116,7 @@ fun ExpenseItem(
         }
     }
 
+    // Show confirmation dialog for deletion
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },

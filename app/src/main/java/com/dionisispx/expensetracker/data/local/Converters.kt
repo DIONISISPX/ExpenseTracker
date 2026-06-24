@@ -4,6 +4,7 @@ import androidx.room.TypeConverter
 import com.dionisispx.expensetracker.domain.model.ExpenseCategory
 import java.time.Instant
 
+// Room database type converters
 class Converters {
 
     @TypeConverter

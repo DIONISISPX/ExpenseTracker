@@ -6,7 +6,7 @@ import com.dionisispx.expensetracker.data.local.entity.ExpenseEntity
 
 import androidx.room.TypeConverters
 
-// Holds the entire database
+// Represents the Room database for expenses
 @Database(
     entities = [ExpenseEntity::class],
     version = 2,
@@ -15,5 +15,6 @@ import androidx.room.TypeConverters
 @TypeConverters(Converters::class)
 abstract class ExpenseDatabase: RoomDatabase() {
 
+    // Provides database operations for expenses
     abstract val dao: ExpenseDao
 }

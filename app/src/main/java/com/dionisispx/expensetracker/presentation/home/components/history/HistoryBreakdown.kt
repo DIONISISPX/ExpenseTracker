@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import com.dionisispx.expensetracker.domain.model.Expense
 import com.dionisispx.expensetracker.presentation.home.components.charts.YearlyBarChart
 
+// Displays history breakdown for a given year
 @Composable
 fun HistoryBreakdown(
     yearlyExpenses: List<Expense>,
@@ -26,6 +27,7 @@ fun HistoryBreakdown(
     modifier: Modifier = Modifier
 ) {
     if (isLandscape) {
+        // Layout for landscape orientation
         Column(modifier = modifier) {
             HistoryHeader(
                 currentYear = currentYear,
@@ -62,6 +64,7 @@ fun HistoryBreakdown(
             }
         }
     } else {
+        // Layout for portrait orientation
         Column(modifier = modifier.verticalScroll(rememberScrollState())) {
             HistoryHeader(
                 currentYear = currentYear,

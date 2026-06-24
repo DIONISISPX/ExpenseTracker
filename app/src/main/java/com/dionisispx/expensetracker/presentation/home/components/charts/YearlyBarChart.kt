@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dionisispx.expensetracker.R
 
+// Displays a bar chart for yearly expenses
 @Composable
 fun YearlyBarChart(
     monthlyTotals: FloatArray,

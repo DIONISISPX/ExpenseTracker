@@ -18,8 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.presentation.util.CurrencyUtils
-import java.util.Locale
 
+// Displays a list of monthly spending breakdowns
 @Composable
 fun MonthlyBreakdownList(
     monthlyTotals: FloatArray,
@@ -41,6 +41,7 @@ fun MonthlyBreakdownList(
         Column(modifier = Modifier.padding(16.dp)) {
             val fullMonths = stringArrayResource(R.array.months_full)
 
+            // Calculate and display amount for each month
             monthlyTotals.forEachIndexed { index, totalSpent ->
                 val isOverBudget = showRemaining && totalSpent > totalBudget
                 val displayAmount = if (showRemaining) {
@@ -49,6 +50,7 @@ fun MonthlyBreakdownList(
                     totalSpent
                 }
                 
+                // Render the month and its corresponding amount
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween

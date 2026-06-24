@@ -61,8 +61,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dionisispx.expensetracker.R
-import com.dionisispx.expensetracker.presentation.budget.BudgetViewModel
-import com.dionisispx.expensetracker.domain.model.Expense
 import com.dionisispx.expensetracker.domain.model.ExpenseCategory
 import com.dionisispx.expensetracker.presentation.util.CurrencyUtils
 import com.dionisispx.expensetracker.presentation.preferences.PreferencesViewModel
@@ -83,12 +81,12 @@ fun BudgetSettingsScreen(
     val savedCategoryLimits by budgetViewModel.categoryLimits.collectAsState()
     val currencySymbol by prefsViewModel.currencyPreference.collectAsState()
 
-    // Local state variables for input handling
+    // Local state variables
     var overallBudgetInput by remember { mutableStateOf("") }
     var categoryLimits by remember { mutableStateOf<Map<ExpenseCategory, Float>>(emptyMap()) }
     var isInitialized by remember { mutableStateOf(false) }
 
-    // Load data once when it arrives from view model
+    // Load data once
     LaunchedEffect(savedTotalBudget, savedCategoryLimits) {
         if (!isInitialized && savedTotalBudget > 0f) {
             overallBudgetInput = savedTotalBudget.toString()
@@ -99,13 +97,13 @@ fun BudgetSettingsScreen(
 
     val overallBudget = overallBudgetInput.toFloatOrNull() ?: 0f
 
-    // Toggle between euro and percent modes
+    // Toggle mode
     var isPercentMode by remember { mutableStateOf(false) }
 
-    // Unified card background color for both light and dark mode
+    // Card background color
     val cardColor = MaterialTheme.colorScheme.surfaceVariant
 
-    // Define categories with vibrant colors to match the donut chart
+    // Define categories
     val categories = ExpenseCategory.entries.map { categoryName ->
         val localizedName = getLocalizedCategoryName(categoryName)
         val details = getCategoryDetails(categoryName)
@@ -149,7 +147,7 @@ fun BudgetSettingsScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // Overall monthly budget section card
+            // Overall monthly budget card
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -171,7 +169,7 @@ fun BudgetSettingsScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Integer input dynamically placing the symbol based on currency
+                    // Integer input
                     MinimalistIntegerInput(
                         value = overallBudgetInput,
                         onValueChange = { input ->
@@ -192,7 +190,7 @@ fun BudgetSettingsScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Limits header and toggle icon
+            // Limits header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -225,7 +223,7 @@ fun BudgetSettingsScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Main list container card
+            // Main list card
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -237,7 +235,7 @@ fun BudgetSettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
 
-                    // Reset button and remaining tracker
+                    // Reset button and tracker
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -274,7 +272,7 @@ fun BudgetSettingsScreen(
 
                     categories.forEachIndexed { index, categoryData ->
 
-                        // Calculate maximum allowed limit for this category
+                        // Calculate maximum allowed limit
                         val currentLimit = categoryLimits[categoryData.internalName] ?: 0f
                         val otherCategoriesSum = categoryLimits.filterKeys { it != categoryData.internalName }.values.sum()
                         val maxAllowedEurForCategory = (overallBudget - otherCategoriesSum).coerceAtLeast(0f)
@@ -292,7 +290,7 @@ fun BudgetSettingsScreen(
                             }
                         )
 
-                        // Add divider between items except for the last one
+                        // Add dividers
                         if (index < categories.size - 1) {
                             HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f), modifier = Modifier.padding(start = 72.dp, end = 16.dp))
                         }
@@ -303,7 +301,7 @@ fun BudgetSettingsScreen(
     }
 }
 
-// Data class to hold category visual info
+// Category visual info
 data class CategoryData(val internalName: ExpenseCategory, val displayName: String, val icon: ImageVector, val color: Color)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -317,19 +315,19 @@ fun CategoryLimitRow(
     currencySymbol: String,
     onLimitChange: (Float) -> Unit
 ) {
-    // Calculate display value based on current mode
+    // Calculate display value
     val displayValue = if (isPercentMode && overallBudget > 0f) {
         ((currentLimitEur / overallBudget) * 100f).toInt().toFloat()
     } else {
         currentLimitEur.toInt().toFloat()
     }
 
-    // Format state for text field to show integers
+    // Format text field state
     var textFieldValue by remember(displayValue, isPercentMode) {
         mutableStateOf(if (displayValue == 0f) "" else displayValue.toInt().toString())
     }
 
-    // Dynamic maximum value caps input to prevent exceeding total budget
+    // Cap input to prevent exceeding budget
     val currentMax = if (isPercentMode) {
         if (overallBudget > 0f) ((maxAllowedEur / overallBudget) * 100f).toLong() else 0L
     } else {
@@ -337,7 +335,7 @@ fun CategoryLimitRow(
     }
 
     val isAppDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
-    // Ensure pure white in light mode, and blend into surfaceVariant in dark mode for the cutout effect
+    // Set icon tint based on theme
     val iconTint = if (isAppDark) MaterialTheme.colorScheme.surfaceVariant else Color.White
 
     Row(
@@ -346,7 +344,7 @@ fun CategoryLimitRow(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.Top
     ) {
-        // Box ensures absolute explicit control over the tint
+        // Box for explicit tint control
         Box(
             modifier = Modifier
                 .padding(top = 4.dp)
@@ -379,7 +377,7 @@ fun CategoryLimitRow(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Slider with custom vertical handle
+                // Slider
                 Slider(
                     value = displayValue,
                     onValueChange = { newValue ->
@@ -408,7 +406,7 @@ fun CategoryLimitRow(
                     }
                 )
 
-                // Fixed width container for input
+                // Fixed width input container
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.width(90.dp)
@@ -434,7 +432,7 @@ fun CategoryLimitRow(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // Conversion helper text
+                    // Conversion text
                     val conversionText = if (currentLimitEur > 0f) {
                         if (isPercentMode) {
                             if (currencySymbol == "$") {
@@ -465,7 +463,7 @@ fun CategoryLimitRow(
     }
 }
 
-// Custom integer input component with dynamic layout
+// Custom integer input component
 @Composable
 fun MinimalistIntegerInput(
     modifier: Modifier = Modifier,
@@ -495,7 +493,7 @@ fun MinimalistIntegerInput(
         BasicTextField(
             value = value,
             onValueChange = { input ->
-                // Strip out non digits
+                // Strip non-digits
                 var cleanInput = input.filter { it.isDigit() }
 
                 // Enforce dynamic limits

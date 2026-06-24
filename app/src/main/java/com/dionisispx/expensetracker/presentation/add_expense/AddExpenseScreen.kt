@@ -46,6 +46,7 @@ import com.dionisispx.expensetracker.presentation.add_expense.components.CameraU
 import com.dionisispx.expensetracker.presentation.add_expense.components.ManualExpenseForm
 import kotlinx.coroutines.launch
 
+// Screen for adding a new expense via camera or manual input
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddExpenseScreen(
@@ -56,7 +57,7 @@ fun AddExpenseScreen(
 ) {
     val context = LocalContext.current
 
-    // Lock screen orientation to portrait to prevent camera aspect ratio squishing and UI disappearing
+    // Lock screen orientation to portrait to preserve camera aspect ratio
     DisposableEffect(Unit) {
         val activity = context.findActivity()
         val originalOrientation = activity?.requestedOrientation ?: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -74,7 +75,7 @@ fun AddExpenseScreen(
     val isConfirmingScan by addExpenseViewModel.isConfirmingScan.collectAsState()
     val isProcessing by addExpenseViewModel.isProcessing.collectAsState()
 
-    // Fetch currency preference
+    // Fetch user currency preference
     val currencyPreference by prefsViewModel.currencyPreference.collectAsState()
 
     val tabs = listOf(
@@ -82,6 +83,7 @@ fun AddExpenseScreen(
         stringResource(R.string.tab_manual)
     )
 
+    // Handle back navigation or dismiss scan confirmation
     val handleBackPress = {
         if (isConfirmingScan) {
             addExpenseViewModel.setConfirmingScan(false)
@@ -95,6 +97,7 @@ fun AddExpenseScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Listen for error events and display them in a snackbar
     LaunchedEffect(Unit) {
         launch {
             addExpenseViewModel.errorEvent.collect { message ->
@@ -177,6 +180,7 @@ fun AddExpenseScreen(
     }
 }
 
+// Find the activity associated with the given context
 fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()

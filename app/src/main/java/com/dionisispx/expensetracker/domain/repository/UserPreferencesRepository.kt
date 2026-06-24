@@ -3,6 +3,7 @@ package com.dionisispx.expensetracker.domain.repository
 import kotlinx.coroutines.flow.Flow
 import com.dionisispx.expensetracker.domain.model.ExpenseCategory
 
+// Repository for managing user preferences
 interface UserPreferencesRepository {
     val isFirstRun: Flow<Boolean>
     val totalBudget: Flow<Int>

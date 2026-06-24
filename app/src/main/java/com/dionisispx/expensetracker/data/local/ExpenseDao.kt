@@ -9,27 +9,27 @@ import com.dionisispx.expensetracker.data.local.entity.ExpenseEntity
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 
-// Defines data access methods for expense records
+// Data access methods for expenses
 @Dao
 interface ExpenseDao {
 
-    // Inserts or replaces an expense record
+    // Inserts or replaces an expense
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExpense(expense: ExpenseEntity): Long
 
-    // Removes a specific expense record
+    // Deletes an expense
     @Delete
     suspend fun deleteExpense(expense: ExpenseEntity): Int
 
-    // Retrieves a reactive stream of all expenses
+    // Retrieves all expenses
     @Query("SELECT * FROM expenses_table")
     fun getAllExpenses(): Flow<List<ExpenseEntity>>
 
-    // Retrieves a reactive stream of expenses within a timeframe
+    // Retrieves expenses within a date range
     @Query("SELECT * FROM expenses_table WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
     fun getExpensesByDateRange(startDate: Instant, endDate: Instant): Flow<List<ExpenseEntity>>
 
-    // Clears all expense records
+    // Deletes all expenses
     @Query("DELETE FROM expenses_table")
     suspend fun deleteAllExpenses()
 }

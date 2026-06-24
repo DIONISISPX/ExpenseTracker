@@ -45,6 +45,7 @@ import com.dionisispx.expensetracker.presentation.home.components.dashboard.Mont
 import com.dionisispx.expensetracker.presentation.home.components.dashboard.SubTabPager
 import com.dionisispx.expensetracker.presentation.home.components.history.HistoryBreakdown
 
+// Main home screen for the app
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
@@ -52,7 +53,7 @@ fun HomeScreen(
     budgetViewModel: BudgetViewModel = hiltViewModel(),
     prefsViewModel: PreferencesViewModel = hiltViewModel()
 ) {
-    // Observe database and view model states
+    // Observe states
     val expenses by expenseViewModel.expenses.collectAsState()
     val yearlyExpenses by expenseViewModel.yearlyExpenses.collectAsState()
     val monthlyTotals by expenseViewModel.monthlyTotals.collectAsState()
@@ -64,7 +65,7 @@ fun HomeScreen(
     val currencyPreference by prefsViewModel.currencyPreference.collectAsState()
     val showRemaining by budgetViewModel.showRemaining.collectAsState()
 
-    // Setup interactive states
+    // Setup UI states
     var selectedMainTab by remember { mutableIntStateOf(0) }
     var selectedSubTab by remember { mutableIntStateOf(0) }
 
@@ -81,7 +82,7 @@ fun HomeScreen(
         stringResource(R.string.tab_limits)
     )
 
-    // Sync sub tab clicks with pager swipes
+    // Sync tabs with pager
     LaunchedEffect(selectedSubTab) {
         pagerState.animateScrollToPage(selectedSubTab)
     }
@@ -109,7 +110,7 @@ fun HomeScreen(
     ) { innerPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
 
-            // Main tabs remain full width regardless of orientation
+            // Main tabs
             TabRow(selectedTabIndex = selectedMainTab) {
                 mainTabs.forEachIndexed { index, title ->
                     Tab(
@@ -122,7 +123,7 @@ fun HomeScreen(
 
             if (selectedMainTab == 0) {
                 if (isLandscape) {
-                    // Split layout for Now tab in landscape
+                    // Landscape layout
                     Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
                         Box(modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
                             MonthSelectorAndChart(currentMonth, expenses, showRemaining, totalBudget.toFloat(), currencyPreference, languagePreference, expenseViewModel)
@@ -145,7 +146,7 @@ fun HomeScreen(
                         }
                     }
                 } else {
-                    // Standard portrait layout utilizing remaining height properly
+                    // Portrait layout
                     Column(modifier = Modifier.weight(1f).fillMaxWidth()) {
                         MonthSelectorAndChart(currentMonth, expenses, showRemaining, totalBudget.toFloat(), currencyPreference, languagePreference, expenseViewModel)
 

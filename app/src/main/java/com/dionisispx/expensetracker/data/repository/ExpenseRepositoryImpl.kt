@@ -15,14 +15,17 @@ class ExpenseRepositoryImpl @Inject constructor(
     private val dao: ExpenseDao
 ) : ExpenseRepository {
 
+    // Retrieves all expenses mapped to domain models
     override fun getAllExpenses(): Flow<List<Expense>> {
         return dao.getAllExpenses().map { entities -> entities.map { it.toDomain() } }
     }
 
+    // Retrieves expenses within a given date range
     override fun getExpensesByDateRange(startDate: Instant, endDate: Instant): Flow<List<Expense>> {
         return dao.getExpensesByDateRange(startDate, endDate).map { entities -> entities.map { it.toDomain() } }
     }
 
+    // Inserts an expense and returns success or failure
     override suspend fun insertExpense(expense: Expense): Result<Unit> {
         return try {
             dao.insertExpense(expense.toEntity())
@@ -32,6 +35,7 @@ class ExpenseRepositoryImpl @Inject constructor(
         }
     }
 
+    // Deletes a specific expense and returns the result
     override suspend fun deleteExpense(expense: Expense): Result<Unit> {
         return try {
             dao.deleteExpense(expense.toEntity())
@@ -41,6 +45,7 @@ class ExpenseRepositoryImpl @Inject constructor(
         }
     }
 
+    // Clears all expenses from the database
     override suspend fun deleteAllExpenses(): Result<Unit> {
         return try {
             dao.deleteAllExpenses()

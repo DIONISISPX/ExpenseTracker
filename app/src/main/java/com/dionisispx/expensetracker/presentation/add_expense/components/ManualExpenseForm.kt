@@ -36,6 +36,7 @@ import com.dionisispx.expensetracker.presentation.util.getLocalizedCategoryName
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+// Composable for entering an expense manually
 fun ManualExpenseForm(
     storeName: String, onStoreNameChange: (String) -> Unit,
     amount: String, onAmountChange: (String) -> Unit,
@@ -45,10 +46,12 @@ fun ManualExpenseForm(
     onSaveExpense: (Expense) -> Unit
 ) {
     var isDropdownExpanded by remember { mutableStateOf(false) }
+    // Map internal categories to localized display names
     val categories = ExpenseCategory.entries.map {
         Pair(it, getLocalizedCategoryName(it))
     }
 
+    // Format the amount label based on the currency symbol
     val amountLabel = if (currencySymbol == "$") {
         stringResource(R.string.amount_label_left, currencySymbol)
     } else {
@@ -56,6 +59,7 @@ fun ManualExpenseForm(
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Store name input field
         OutlinedTextField(
             value = storeName,
             onValueChange = onStoreNameChange,
@@ -71,6 +75,7 @@ fun ManualExpenseForm(
             }
         )
 
+        // Amount input field
         OutlinedTextField(
             value = amount, onValueChange = onAmountChange,
             label = { Text(amountLabel) },
@@ -79,6 +84,7 @@ fun ManualExpenseForm(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true
         )
 
+        // Dropdown menu for selecting an expense category
         ExposedDropdownMenuBox(expanded = isDropdownExpanded, onExpandedChange = { isDropdownExpanded = !isDropdownExpanded }) {
             OutlinedTextField(
                 value = categories.find { it.first == category }?.second ?: stringResource(R.string.cat_other),
@@ -112,6 +118,9 @@ fun ManualExpenseForm(
         Button(
             modifier = Modifier.fillMaxWidth().height(56.dp),
             onClick = {
+                // 1. Validate that inputs are not blank
+                // 2. Create a new expense instance
+                // 3. Save and navigate back
                 if (storeName.isNotBlank() && amount.isNotBlank()) {
                     val newExpense = Expense(
                         storeName = storeName.uppercase(),

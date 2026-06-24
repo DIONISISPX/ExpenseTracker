@@ -23,10 +23,11 @@ import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.presentation.util.CurrencyUtils
 import com.dionisispx.expensetracker.domain.model.Expense
 import com.dionisispx.expensetracker.presentation.util.getCategoryDetails
-import java.util.Locale
 
+// Displays a donut chart of expenses
 @Composable
 fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Float, currencySymbol: String) {
+    // Calculate total spent amount
     val totalSpent = expenses.sumOf { it.amount }.toFloat()
 
     Box(
@@ -35,8 +36,9 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Enforcing explicit canvas size and aspect ratio so it cannot stretch into an oval
+        // Enforce explicit canvas size and aspect ratio
         Canvas(modifier = Modifier.size(180.dp).aspectRatio(1f)) {
+            // Draw background circle
             drawArc(
                 color = Color.LightGray.copy(alpha = 0.3f),
                 startAngle = 0f,
@@ -47,10 +49,12 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
 
             if (expenses.isNotEmpty() && totalSpent > 0f) {
                 var currentStartAngle = -90f
+                // Group expenses by category
                 val groupedExpenses = expenses.groupBy { it.category }
                 val scaleBase = if (showRemaining && totalBudget > 0f) totalBudget else totalSpent
 
                 if (showRemaining && totalSpent > totalBudget) {
+                    // Draw red arc if over budget
                     drawArc(
                         color = Color.Red,
                         startAngle = -90f,
@@ -59,6 +63,7 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
                         style = Stroke(width = 50f, cap = StrokeCap.Butt)
                     )
                 } else {
+                    // Draw colored arcs for each category
                     groupedExpenses.entries.forEach { entry ->
                         val categoryTotal = entry.value.sumOf { it.amount }.toFloat()
                         val sweepAngle = (categoryTotal / scaleBase) * 360f
@@ -77,6 +82,7 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
             }
         }
 
+        // Display center text with amount
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.animateContentSize()) {
             if (showRemaining) {
                 val remaining = (totalBudget - totalSpent).coerceAtLeast(0f)

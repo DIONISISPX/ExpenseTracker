@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// View model for adding new expenses
 @HiltViewModel
 class AddExpenseViewModel @Inject constructor(
     private val imageProcessor: ImageProcessor,
@@ -58,6 +59,7 @@ class AddExpenseViewModel @Inject constructor(
     private val _errorEvent = kotlinx.coroutines.flow.MutableSharedFlow<String>()
     val errorEvent = _errorEvent.asSharedFlow()
 
+    // Process an image to extract expense details
     fun processImage(uriString: String) {
         viewModelScope.launch {
             _isProcessing.value = true
@@ -75,7 +77,7 @@ class AddExpenseViewModel @Inject constructor(
                     val extractedText = textResult.getOrThrow()
                     android.util.Log.d("AddExpenseViewModel", "Extracted text: $extractedText")
 
-                    // 3. Analyze text with UseCase
+                    // 3. Analyze text with use case
                     val userDictionary = getUserDictionary()
                     val receiptData = analyzeReceiptUseCase(extractedText, userDictionary)
                     android.util.Log.d("AddExpenseViewModel", "Analyzed receipt data: $receiptData")
@@ -98,6 +100,7 @@ class AddExpenseViewModel @Inject constructor(
         }
     }
 
+    // Retrieve user dictionary from past expenses
     private suspend fun getUserDictionary(): Map<String, ExpenseCategory> {
         val allExpenses = expenseRepository.getAllExpenses().firstOrNull() ?: emptyList()
         val dict = mutableMapOf<String, ExpenseCategory>()

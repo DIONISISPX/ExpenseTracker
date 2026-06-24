@@ -2,9 +2,10 @@ package com.dionisispx.expensetracker.domain.usecase
 
 import javax.inject.Inject
 
+// Normalizes Greek text for matching and comparison
 class GreekTextNormalizer @Inject constructor() {
 
-    // Removes all accent marks from greek letters
+    // Removes all accent marks from Greek letters
     fun stripGreekAccents(input: String): String {
         return input
             .replace("Ά", "Α").replace("Έ", "Ε").replace("Ή", "Η")
@@ -16,7 +17,7 @@ class GreekTextNormalizer @Inject constructor() {
             .replace("ΐ", "ι").replace("ΰ", "υ")
     }
 
-    // Simplifies string to base latin characters for fuzzy matching
+    // Simplifies string to base Latin characters for fuzzy matching
     fun normalizeForFuzzy(input: String): String {
         return stripGreekAccents(input.uppercase())
             .replace(".", "").replace(",", "").replace("-", "")
@@ -28,7 +29,7 @@ class GreekTextNormalizer @Inject constructor() {
             .replace("Z", "Ζ").replace("B", "Β").replace("U", "Υ")
     }
 
-    // Calculates text similarity ratio using levenshtein distance
+    // Calculates text similarity ratio using Levenshtein distance
     fun similarity(s1: String, s2: String): Double {
         var longer = s1
         var shorter = s2
@@ -48,10 +49,10 @@ class GreekTextNormalizer @Inject constructor() {
         var cost = IntArray(len0)
         var newcost = IntArray(len0)
         
-        // Initialize base costs
+        // Initializes base costs
         for (i in 0 until len0) cost[i] = i
         
-        // Calculate matrix
+        // Calculates cost matrix
         for (j in 1 until len1) {
             newcost[0] = j
             for (i in 1 until len0) {

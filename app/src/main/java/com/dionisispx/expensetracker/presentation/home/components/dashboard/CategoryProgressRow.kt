@@ -25,17 +25,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.presentation.util.CurrencyUtils
 import com.dionisispx.expensetracker.presentation.util.getCategoryDetails
 import com.dionisispx.expensetracker.presentation.util.getLocalizedCategoryName
-import java.util.Locale
 
 import com.dionisispx.expensetracker.domain.model.ExpenseCategory
 
+// Displays a progress row for an expense category
 @Composable
 fun CategoryProgressRow(
     categoryName: ExpenseCategory,
@@ -43,18 +41,20 @@ fun CategoryProgressRow(
     limitAmount: Float,
     currencySymbol: String
 ) {
+    // Calculate progress and budget status
     val progress = if (limitAmount > 0f) (spentAmount / limitAmount).coerceIn(0f, 1f) else 0f
     val isOverBudget = spentAmount > limitAmount
     val barColor = if (isOverBudget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
     val percentText = if (limitAmount > 0f) "${((spentAmount / limitAmount) * 100).toInt()}%" else "0%"
 
+    // Format currency amounts for display
     val formattedSpent = CurrencyUtils.formatCurrencyNoDecimals(spentAmount, currencySymbol)
     val formattedLimit = CurrencyUtils.formatCurrencyNoDecimals(limitAmount, currencySymbol)
     val limitText = "$formattedSpent / $formattedLimit"
 
     val (icon, bgColor) = getCategoryDetails(categoryName)
 
-    // Check luminance of the app background to guarantee pure white in light mode
+    // Check background luminance to ensure pure white in light mode
     val isAppDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val iconTint = if (isAppDark) MaterialTheme.colorScheme.surface else Color.White
 
@@ -67,7 +67,7 @@ fun CategoryProgressRow(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Box ensures absolute explicit control over the tint
+            // Ensures explicit control over the tint
             Box(
                 modifier = Modifier
                     .size(48.dp)

@@ -39,6 +39,7 @@ import com.dionisispx.expensetracker.presentation.home.components.charts.DonutCh
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+// Displays month selector and expense chart
 @Composable
 fun MonthSelectorAndChart(
     currentMonth: java.time.YearMonth,
@@ -56,8 +57,10 @@ fun MonthSelectorAndChart(
         modifier = Modifier
             .fillMaxWidth()
             .pointerInput(Unit) {
+                // Detect horizontal swipe to navigate between months
                 detectHorizontalDragGestures(
                     onDragEnd = {
+                        // Change month if swipe distance is significant
                         if (swipeOffset > 40) viewModel.previousMonth()
                         else if (swipeOffset < -40) viewModel.nextMonth()
                         swipeOffset = 0f
@@ -89,7 +92,7 @@ fun MonthSelectorAndChart(
             }
         }
 
-        // Animated Content Layer
+        // Animated content layer
         AnimatedContent(
             targetState = Pair(currentMonth, expenses),
             transitionSpec = {

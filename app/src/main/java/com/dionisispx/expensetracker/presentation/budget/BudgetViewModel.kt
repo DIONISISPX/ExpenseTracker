@@ -13,22 +13,27 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// Manages budget-related UI state and user preferences
 @HiltViewModel
 class BudgetViewModel @Inject constructor(
     private val prefsRepository: UserPreferencesRepository
 ) : ViewModel() {
 
+    // Indicates whether to show the remaining budget or the spent amount
     private val _showRemaining = MutableStateFlow(false)
     val showRemaining: StateFlow<Boolean> = _showRemaining.asStateFlow()
 
+    // Holds the total budget amount
     val totalBudget: StateFlow<Int> = prefsRepository.totalBudget.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), 1000
     )
 
+    // Holds the budget limits per category
     val categoryLimits: StateFlow<Map<ExpenseCategory, Float>> = prefsRepository.categoryLimits.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap()
     )
 
+    // Saves the total budget and category limits to user preferences
     fun saveBudgetAndLimits(budget: Int, limits: Map<ExpenseCategory, Float>) {
         viewModelScope.launch {
             prefsRepository.saveTotalBudget(budget)
@@ -36,10 +41,12 @@ class BudgetViewModel @Inject constructor(
         }
     }
 
+    // Toggles the visibility state between showing remaining and spent budget
     fun toggleShowRemaining() {
         _showRemaining.value = !_showRemaining.value
     }
 
+    // Resets the total budget and category limits to their default values
     fun resetBudget() {
         viewModelScope.launch {
             prefsRepository.saveTotalBudget(1000)

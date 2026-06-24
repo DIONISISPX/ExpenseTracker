@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.presentation.preferences.PreferencesViewModel
 
+// Screen for setting initial user preferences during onboarding
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OnboardingPrefsScreen(

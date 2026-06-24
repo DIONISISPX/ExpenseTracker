@@ -22,7 +22,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class AppModule {
+abstract class AppModule { // Dagger Hilt module for dependency injection
 
     @Binds
     @Singleton
@@ -57,7 +57,7 @@ abstract class AppModule {
                 ExpenseDatabase::class.java,
                 "expense_db"
             )
-            .fallbackToDestructiveMigration() // Added this to fix the schema crash
+            .fallbackToDestructiveMigration() // Fix schema crash
             .build()
         }
 

@@ -52,17 +52,20 @@ import com.dionisispx.expensetracker.presentation.add_expense.CameraPreview
 import java.io.File
 import android.media.MediaActionSound
 
+// Displays the camera UI for taking or picking a receipt photo
 @Composable
 fun CameraUI(
     isProcessing: Boolean,
     onImageSelected: (String) -> Unit
 ) {
+    // 1. Initialize context, camera and shutter sound
     val context = LocalContext.current
     val imageCapture = remember { ImageCapture.Builder().build() }
     val sound = remember { MediaActionSound().apply { load(MediaActionSound.SHUTTER_CLICK) } }
 
     var flashEnabled by remember { mutableStateOf(false) }
 
+    // 2. Check and request camera permission
     var hasCameraPermission by remember {
         mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
     }
@@ -72,7 +75,7 @@ fun CameraUI(
         onResult = { isGranted -> hasCameraPermission = isGranted }
     )
 
-    // Launcher for photo picker
+    // 3. Set up gallery launcher for photo picking
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
@@ -82,10 +85,12 @@ fun CameraUI(
         }
     )
 
+    // 4. Request camera permission on launch
     LaunchedEffect(Unit) {
         if (!hasCameraPermission) permissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
+    // 5. Render the camera preview, loading state, and controls
     Box(modifier = Modifier.fillMaxSize()) {
         if (hasCameraPermission) {
             CameraPreview(
@@ -162,6 +167,7 @@ fun CameraUI(
     }
 }
 
+// Captures a photo and triggers the callback upon success
 private fun takePhoto(context: Context, imageCapture: ImageCapture, onPhotoTaken: (Uri) -> Unit) {
     val photoFile = File(context.cacheDir, "receipt_${System.currentTimeMillis()}.jpg")
     val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()

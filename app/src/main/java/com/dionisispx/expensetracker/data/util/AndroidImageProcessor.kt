@@ -18,7 +18,7 @@ class AndroidImageProcessor @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) : ImageProcessor {
 
-    // Processes an image URI into a base64 string for API transmission
+    // Process image URI to base64 string
     override suspend fun getBase64FromUri(uriString: String): Result<String> {
         return withContext(Dispatchers.IO) {
             try {
@@ -28,7 +28,7 @@ class AndroidImageProcessor @Inject constructor(
                 inputStream?.close()
 
                 if (originalBitmap != null) {
-                    // Adjusts image rotation based on metadata
+                    // Adjust image rotation based on metadata
                     inputStream = context.contentResolver.openInputStream(uri)
                     val exif = ExifInterface(inputStream!!)
                     val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
@@ -41,7 +41,7 @@ class AndroidImageProcessor @Inject constructor(
                         ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
                     }
 
-                    // Compresses image dimensions to reduce payload size
+                    // Compress image dimensions to reduce payload size
                     val maxDimension = 1024f
                     val scale = minOf(maxDimension / originalBitmap.width, maxDimension / originalBitmap.height)
 
@@ -50,15 +50,15 @@ class AndroidImageProcessor @Inject constructor(
                     }
                     val processedBitmap = Bitmap.createBitmap(originalBitmap, 0, 0, originalBitmap.width, originalBitmap.height, matrix, true)
 
-                    // Frees memory allocated for the original unscaled image
+                    // Free memory of original image
                     if (processedBitmap != originalBitmap) {
                         originalBitmap.recycle()
                     }
 
-                    // Encodes the processed image to a base64 string
+                    // Encode processed image to base64 string
                     val byteArrayOutputStream = ByteArrayOutputStream()
                     processedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream)
-                    processedBitmap.recycle() // Frees memory allocated for the compressed image
+                    processedBitmap.recycle() // Free memory of compressed image
 
                     val imageBytes = byteArrayOutputStream.toByteArray()
                     val base64Image = Base64.encodeToString(imageBytes, Base64.NO_WRAP)

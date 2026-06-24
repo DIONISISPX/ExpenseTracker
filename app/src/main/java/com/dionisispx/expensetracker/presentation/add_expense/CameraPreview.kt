@@ -44,18 +44,18 @@ fun CameraPreview(
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
-    // State to hold CameraControl for focusing and torch
+    // Camera control state for focusing and torch
     var cameraControl by remember { mutableStateOf<CameraControl?>(null) }
     var cameraInfo by remember { mutableStateOf<CameraInfo?>(null) }
 
-    // Maintain reference to the PreviewView instance for accurate autofocus metering
+    // Maintain reference to preview view for autofocus
     var previewViewRef by remember { mutableStateOf<PreviewView?>(null) }
 
     // State for the focus indicator UI
     var focusPoint by remember { mutableStateOf<androidx.compose.ui.geometry.Offset?>(null) }
     val focusAlpha = remember { Animatable(0f) }
 
-    // Unbind camera (which also explicitly turns off the torch) when the user leaves this composable/tab
+    // Unbind camera on dispose
     DisposableEffect(Unit) {
         onDispose {
             val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
@@ -70,7 +70,7 @@ fun CameraPreview(
         }
     }
 
-    // Toggle the torch based on the passed state
+    // Toggle torch state
     LaunchedEffect(flashEnabled, cameraControl) {
         if (cameraInfo?.hasFlashUnit() == true) {
             cameraControl?.enableTorch(flashEnabled)
@@ -88,7 +88,7 @@ fun CameraPreview(
                     )
                 }
 
-                // Store the reference
+                // Store preview view reference
                 previewViewRef = previewView
 
                 val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
@@ -126,7 +126,7 @@ fun CameraPreview(
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onTap = { offset ->
-                            // Show the visual indicator
+                            // Show visual indicator
                             focusPoint = offset
 
                             // Perform camera focus
@@ -146,10 +146,10 @@ fun CameraPreview(
                 }
         )
 
-        // The Visual Focus Indicator
+        // Visual focus indicator
         focusPoint?.let { point ->
             LaunchedEffect(point) {
-                // Animate alpha to 1, wait a bit, then fade out
+                // Animate alpha for fade effect
                 focusAlpha.snapTo(1f)
                 delay(800)
                 focusAlpha.animateTo(0f, animationSpec = tween(500))
@@ -161,7 +161,7 @@ fun CameraPreview(
             Box(
                 modifier = Modifier
                     .offset {
-                        // Center the 60dp circle on the tap point
+                        // Center circle on tap point
                         IntOffset(
                             x = point.x.toInt() - 30.dp.roundToPx(),
                             y = point.y.toInt() - 30.dp.roundToPx()

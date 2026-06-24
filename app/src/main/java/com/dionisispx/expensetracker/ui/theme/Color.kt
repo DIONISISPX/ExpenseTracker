@@ -2,6 +2,7 @@ package com.dionisispx.expensetracker.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+// Theme color definitions
 val Blue80 = Color(0xFFC3D4FF)
 val BlueGrey80 = Color(0xFFC1CBDF)
 val LightBlue80 = Color(0xFFDDE1FF)

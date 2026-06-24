@@ -3,7 +3,7 @@ package com.dionisispx.expensetracker.data.mapper
 import com.dionisispx.expensetracker.data.local.entity.ExpenseEntity
 import com.dionisispx.expensetracker.domain.model.Expense
 
-// Reading from DB
+// Maps entity to domain model
 fun ExpenseEntity.toDomain(): Expense {
     return Expense(
         id = id,
@@ -14,7 +14,7 @@ fun ExpenseEntity.toDomain(): Expense {
     )
 }
 
-// Writing to DB
+// Maps domain model to entity
 fun Expense.toEntity(): ExpenseEntity {
     return ExpenseEntity(
         id = id,

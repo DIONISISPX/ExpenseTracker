@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dionisispx.expensetracker.R
 
+// Displays the onboarding welcome screen
 @Composable
 fun OnboardingWelcomeScreen(
     onNextClick: () -> Unit,
@@ -46,6 +47,7 @@ fun OnboardingWelcomeScreen(
         ) {
             Spacer(modifier = Modifier.weight(1f))
             
+            // Display welcome icon
             Icon(
                 imageVector = Icons.Default.Insights,
                 contentDescription = null,
@@ -55,6 +57,7 @@ fun OnboardingWelcomeScreen(
             
             Spacer(modifier = Modifier.height(32.dp))
             
+            // Display welcome title
             Text(
                 text = stringResource(R.string.onboarding_welcome_title),
                 style = MaterialTheme.typography.headlineMedium,
@@ -64,6 +67,7 @@ fun OnboardingWelcomeScreen(
             
             Spacer(modifier = Modifier.height(16.dp))
             
+            // Display welcome message
             Text(
                 text = stringResource(R.string.onboarding_welcome_message),
                 style = MaterialTheme.typography.bodyLarge,
@@ -73,6 +77,7 @@ fun OnboardingWelcomeScreen(
             
             Spacer(modifier = Modifier.weight(1f))
             
+            // Display navigation buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

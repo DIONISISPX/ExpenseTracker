@@ -5,13 +5,13 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 
-// Defines the screens in the app
+// Defines app screens
 sealed class Screen(val route: String, val icon: ImageVector?) {
 
     // Home screen
     object Home : Screen("home", Icons.Default.Home)
 
-    // Scanner or manual add screen. No icon (FAB)
+    // Scanner or manual add screen without icon
     object AddExpense : Screen("add_expense", null)
 
     // Settings screen

@@ -26,15 +26,20 @@ import androidx.compose.ui.unit.dp
 import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.domain.model.Expense
 import com.dionisispx.expensetracker.presentation.util.CurrencyUtils
-import java.util.Locale
 
+// Displays total spent and remaining budget
 @Composable
 fun MasterProgressCard(expenses: List<Expense>, totalBudget: Float, currencySymbol: String) {
+    // Calculate total spent amount
     val totalSpent = expenses.sumOf { it.amount }.toFloat()
+    // Calculate progress ratio
     val progress = if (totalBudget > 0f) (totalSpent / totalBudget).coerceIn(0f, 1f) else 0f
+    // Check if budget is exceeded
     val isOverBudget = totalSpent > totalBudget
+    // Calculate remaining budget
     val remaining = (totalBudget - totalSpent).coerceAtLeast(0f)
 
+    // Format amounts with currency symbol
     val formattedSpent = CurrencyUtils.formatCurrency(totalSpent, currencySymbol)
     val formattedRemaining = CurrencyUtils.formatCurrency(remaining, currencySymbol)
 
@@ -80,6 +85,7 @@ fun MasterProgressCard(expenses: List<Expense>, totalBudget: Float, currencySymb
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Render progress bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 
+// Displays the history section header with year navigation
 @Composable
 fun HistoryHeader(
     currentYear: Int,

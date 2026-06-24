@@ -16,8 +16,8 @@ import androidx.compose.ui.unit.dp
 import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.domain.model.Expense
 import com.dionisispx.expensetracker.presentation.util.CurrencyUtils
-import java.util.Locale
 
+// Displays the yearly total or remaining budget
 @Composable
 fun YearlyTotalCard(
     yearlyExpenses: List<Expense>,
@@ -25,10 +25,12 @@ fun YearlyTotalCard(
     totalBudget: Float = 0f,
     currencyPreference: String
 ) {
+    // Calculate spent amount and yearly budget
     val yearlySpent = yearlyExpenses.sumOf { it.amount }.toFloat()
     val yearlyBudget = totalBudget * 12
     val isOverBudget = showRemaining && yearlySpent > yearlyBudget
 
+    // Determine the amount to display
     val displayAmount = if (showRemaining) {
         if (isOverBudget) yearlySpent - yearlyBudget else yearlyBudget - yearlySpent
     } else {

@@ -75,7 +75,7 @@ class StoreNameMatcher @Inject constructor(
         "ΕΥΔΑΠ" to ExpenseCategory.BILLS_UTILITIES
     )
 
-    // Common greek company suffixes to ignore
+    // Common Greek company suffixes to ignore
     private val companySuffixes = setOf(
         "ΙΚΕ", "IKE", "ΑΕ", "AE", "ΕΠΕ", "EPE", "ΟΕ", "OE", "ΕΕ", "EE",
         "ΜΙΚΕ", "MIKE", "ΜΕΠΕ", "MEPE", "ΑΕΒΕ", "AEBE"
@@ -85,13 +85,13 @@ class StoreNameMatcher @Inject constructor(
         var finalStore = ""
         var finalCategory = ExpenseCategory.OTHER
 
-        // Remove punctuation for store name matching
+        // 1. Remove punctuation for store name matching
         val cleanTextForNames = upperText
             .replace("\"", "").replace("'", "")
             .replace("«", "").replace("»", "")
             .replace(".", " ").replace(",", " ")
 
-        // Filter out suffixes from words
+        // 2. Filter out suffixes from words
         val words = cleanTextForNames.split(Regex("\\s+"))
             .filter { it.isNotBlank() }
             .map { it.trim() }
@@ -100,13 +100,13 @@ class StoreNameMatcher @Inject constructor(
                 normalizedWord !in companySuffixes
             }
 
-        // Merge seed data with user dictionary
+        // 3. Merge seed data with user dictionary
         val combinedDictionary = seedDictionary + userDictionary
 
         var bestMatchScore = 0.0
         val phrases = mutableListOf<String>()
         
-        // Build n-gram combinations up to four words
+        // 4. Build n-gram combinations up to four words
         for (i in words.indices) {
             phrases.add(words[i])
             if (i < words.size - 1) phrases.add("${words[i]} ${words[i + 1]}")
@@ -114,7 +114,7 @@ class StoreNameMatcher @Inject constructor(
             if (i < words.size - 3) phrases.add("${words[i]} ${words[i + 1]} ${words[i + 2]} ${words[i + 3]}")
         }
 
-        // Compare generated phrases against dictionary
+        // 5. Compare generated phrases against dictionary
         for (phrase in phrases) {
             if (phrase.length < 3) continue
             for ((store, category) in combinedDictionary) {
@@ -130,7 +130,7 @@ class StoreNameMatcher @Inject constructor(
             }
         }
 
-        // Use top text line as fallback if no store is matched
+        // 6. Use top text line as fallback if no store is matched
         if (finalStore.isEmpty()) {
             val ignoreTokens = listOf("ΑΠΟΔΕΙΞΗ", "ΕΙΔΙΚΟ", "ΦΟΡΟΛΟΓΙΚΟ", "ΔΕΛΤΙΟ", "ΕΝΑΡΞΗ", "ΛΗΞΗ", "ΝΟΜΙΜΗ", "ΠΩΛΗΣΗΣ", "ΛΙΑΝΙΚΗΣ", "ΕΚΔΟΣΗΣ")
             for (line in upperText.lines().map { it.trim() }) {

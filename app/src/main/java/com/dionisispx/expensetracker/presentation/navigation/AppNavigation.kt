@@ -49,7 +49,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
     val isFirstRun by prefsViewModel.isFirstRun.collectAsState()
 
     if (isFirstRun == null) {
-        return // Wait for preference to load
+        // Wait for preference to load
+        return
     }
 
     val startDestination = remember {
@@ -59,11 +60,11 @@ fun MainScreen(modifier: Modifier = Modifier) {
     // Controller that manages app navigation
     val navController = rememberNavController()
 
-    // Get current route to highlight the selected item and hide/show bottom bar
+    // Get current route to highlight the selected item and control bottom bar visibility
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Boolean to check if we should show the bottom bar (hide it on AddExpense, Budget settings, and onboarding)
+    // Check if we should show the bottom bar
     val showBottomBar = currentRoute != Screen.AddExpense.route && 
                         currentRoute != Screen.BudgetSettings.route &&
                         currentRoute != Screen.OnboardingWelcome.route &&
@@ -74,7 +75,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         bottomBar = {
-            // Only show the bottom bar if showBottomBar is true
+            // Show the bottom bar only if condition is met
             if (showBottomBar) {
                 Box(
                     modifier = Modifier
@@ -83,7 +84,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     NavigationBar(
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        // Home Icon Button (Left)
+                        // Home icon button
                         val isHomeActive = currentRoute == Screen.Home.route
                         NavigationBarItem(
                             selected = isHomeActive,
@@ -101,7 +102,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         // Empty space for the center FAB
                         Spacer(modifier = Modifier.weight(1f))
 
-                        // Settings Icon Button (Right)
+                        // Settings icon button
                         val isSettingsActive = currentRoute == Screen.Settings.route
                         NavigationBarItem(
                             selected = isSettingsActive,
@@ -116,7 +117,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
                             label = { Text(stringResource(R.string.tab_settings)) }
                         )
                     }
-                    // Add Expense FAB (Center)
+
+                    // Add expense FAB
                     FloatingActionButton(
                         onClick = {
                             navController.navigate(Screen.AddExpense.route) {
