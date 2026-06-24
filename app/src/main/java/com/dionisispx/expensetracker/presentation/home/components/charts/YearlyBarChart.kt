@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -31,7 +30,7 @@ fun YearlyBarChart(
 ) {
     val maxSpent = monthlyTotals.maxOrNull() ?: 0f
     val maxScale = maxOf(maxSpent, totalBudget * 1.15f).let { if (it == 0f) 1f else it }
-    
+
     val monthNames = stringArrayResource(R.array.months_short)
 
     Row(
@@ -44,7 +43,7 @@ fun YearlyBarChart(
     ) {
         monthlyTotals.forEachIndexed { index, spentAmount ->
             val isOverBudget = spentAmount > totalBudget
-            
+
             // Calculate height fraction based on mode
             val displayAmount = if (showRemaining) {
                 (totalBudget - spentAmount).coerceAtLeast(0f)
@@ -67,7 +66,7 @@ fun YearlyBarChart(
                                 .fillMaxWidth(0.7f)
                                 .fillMaxHeight(0.01f)
                                 .background(
-                                    color = Color.Red,
+                                    color = MaterialTheme.colorScheme.error,
                                     shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
                                 )
                         )
@@ -78,7 +77,7 @@ fun YearlyBarChart(
                                 .fillMaxHeight(heightFraction.coerceAtLeast(0.01f))
                                 .background(
                                     color = when {
-                                        isOverBudget -> Color.Red
+                                        isOverBudget -> MaterialTheme.colorScheme.error
                                         else -> MaterialTheme.colorScheme.primary
                                     },
                                     shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)

@@ -49,7 +49,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -235,7 +234,8 @@ fun SettingsScreen(
                         onExpandedChange = { isThemeDropdownExpanded = !isThemeDropdownExpanded }
                     ) {
                         OutlinedTextField(
-                            value = themeOptions.find { it.first == currentTheme.lowercase() }?.second ?: stringResource(R.string.theme_system),
+                            value = themeOptions.find { it.first == currentTheme.lowercase() }?.second
+                                ?: stringResource(R.string.theme_system),
                             onValueChange = {},
                             readOnly = true,
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isThemeDropdownExpanded) },
@@ -297,7 +297,8 @@ fun SettingsScreen(
                         onExpandedChange = { isLanguageDropdownExpanded = !isLanguageDropdownExpanded }
                     ) {
                         OutlinedTextField(
-                            value = languageOptions.find { it.first == currentLanguage }?.second ?: stringResource(R.string.language_el),
+                            value = languageOptions.find { it.first == currentLanguage }?.second
+                                ?: stringResource(R.string.language_el),
                             onValueChange = {},
                             readOnly = true,
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isLanguageDropdownExpanded) },
@@ -478,7 +479,11 @@ fun SettingsScreen(
                                 Toast.makeText(context, "All data wiped", Toast.LENGTH_SHORT).show()
                             }
                         ) {
-                            Text(btnDeleteEverything, color = Color.Red, fontWeight = FontWeight.Bold)
+                            Text(
+                                btnDeleteEverything,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     },
                     dismissButton = {

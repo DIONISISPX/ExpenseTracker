@@ -129,7 +129,7 @@ fun ExpenseItem(
                         showDeleteDialog = false
                     }
                 ) {
-                    Text(btnDelete, color = Color.Red)
+                    Text(btnDelete, color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {

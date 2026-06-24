@@ -30,6 +30,8 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
     // Calculate total spent amount
     val totalSpent = expenses.sumOf { it.amount }.toFloat()
 
+    val errorColor = MaterialTheme.colorScheme.error
+
     Box(
         modifier = Modifier
             .size(220.dp)
@@ -56,7 +58,7 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
                 if (showRemaining && totalSpent > totalBudget) {
                     // Draw red arc if over budget
                     drawArc(
-                        color = Color.Red,
+                        color = errorColor,
                         startAngle = -90f,
                         sweepAngle = 360f,
                         useCenter = false,
@@ -93,14 +95,14 @@ fun DonutChart(expenses: List<Expense>, showRemaining: Boolean, totalBudget: Flo
                 Text(
                     text = if (isOver) stringResource(R.string.over_budget) else stringResource(R.string.remaining),
                     style = MaterialTheme.typography.labelMedium,
-                    color = if (isOver) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (isOver) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
                 Text(
                     text = CurrencyUtils.formatCurrency(centerValue, currencySymbol),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (isOver) Color.Red else MaterialTheme.colorScheme.onSurface
+                    color = if (isOver) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
                 )
             } else {
                 Text(
