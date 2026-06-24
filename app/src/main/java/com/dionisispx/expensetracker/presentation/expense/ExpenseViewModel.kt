@@ -1,4 +1,4 @@
-package com.dionisispx.expensetracker.presentation
+package com.dionisispx.expensetracker.presentation.expense
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +10,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -39,7 +40,7 @@ class ExpenseViewModel @Inject constructor(
     val monthlyTotals: StateFlow<FloatArray> = _yearlyExpenses.map { expenses ->
         val totals = FloatArray(12)
         expenses.forEach { expense ->
-            val date = java.time.Instant.ofEpochMilli(expense.date).atZone(ZoneId.systemDefault()).toLocalDate()
+            val date = expense.date.atZone(ZoneId.systemDefault()).toLocalDate()
             val monthIndex = date.monthValue - 1
             totals[monthIndex] += expense.amount.toFloat()
         }
@@ -65,8 +66,8 @@ class ExpenseViewModel @Inject constructor(
     private fun loadExpensesForMonth(yearMonth: YearMonth) {
         currentMonthJob?.cancel()
         currentMonthJob = viewModelScope.launch {
-            val startOfMonth = DateUtils.getStartOfMonthMillis(yearMonth)
-            val endOfMonth = DateUtils.getEndOfMonthMillis(yearMonth)
+            val startOfMonth = DateUtils.getStartOfMonthInstant(yearMonth)
+            val endOfMonth = DateUtils.getEndOfMonthInstant(yearMonth)
 
             repository.getExpensesByDateRange(startOfMonth, endOfMonth).collect { expenseList ->
                 _expenses.value = expenseList
@@ -77,8 +78,8 @@ class ExpenseViewModel @Inject constructor(
     private fun loadExpensesForYear(year: Int) {
         currentYearJob?.cancel()
         currentYearJob = viewModelScope.launch {
-            val startOfYear = DateUtils.getStartOfYearMillis(year)
-            val endOfYear = DateUtils.getEndOfYearMillis(year)
+            val startOfYear = DateUtils.getStartOfYearInstant(year)
+            val endOfYear = DateUtils.getEndOfYearInstant(year)
 
             repository.getExpensesByDateRange(startOfYear, endOfYear).collect { expenseList ->
                 _yearlyExpenses.value = expenseList
@@ -102,17 +103,33 @@ class ExpenseViewModel @Inject constructor(
         _currentYear.value -= 1
     }
 
+    private val _errorEvent = kotlinx.coroutines.flow.MutableSharedFlow<String>()
+    val errorEvent = _errorEvent.asSharedFlow()
+
     fun addExpense(expense: Expense) {
-        viewModelScope.launch { repository.insertExpense(expense) }
+        viewModelScope.launch { 
+            val result = repository.insertExpense(expense)
+            if (result.isFailure) {
+                _errorEvent.emit("Failed to add expense: ${result.exceptionOrNull()?.message}")
+            }
+        }
     }
 
     fun deleteExpense(expense: Expense) {
-        viewModelScope.launch { repository.deleteExpense(expense) }
+        viewModelScope.launch { 
+            val result = repository.deleteExpense(expense)
+            if (result.isFailure) {
+                _errorEvent.emit("Failed to delete expense: ${result.exceptionOrNull()?.message}")
+            }
+        }
     }
 
     fun deleteAllData() {
         viewModelScope.launch {
-            repository.deleteAllExpenses()
+            val result = repository.deleteAllExpenses()
+            if (result.isFailure) {
+                _errorEvent.emit("Failed to delete all data: ${result.exceptionOrNull()?.message}")
+            }
         }
     }
 

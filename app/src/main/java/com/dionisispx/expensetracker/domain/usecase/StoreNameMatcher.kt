@@ -1,5 +1,6 @@
 package com.dionisispx.expensetracker.domain.usecase
 
+import com.dionisispx.expensetracker.domain.model.ExpenseCategory
 import javax.inject.Inject
 
 class StoreNameMatcher @Inject constructor(
@@ -8,70 +9,70 @@ class StoreNameMatcher @Inject constructor(
 
     // Predefined store to category mappings
     private val seedDictionary = mapOf(
-        "ΣΚΛΑΒΕΝΙΤΗΣ" to "Groceries",
-        "ΓΑΛΑΞΙΑΣ" to "Groceries",
-        "ΑΒ ΒΑΣΙΛΟΠΟΥΛΟΣ" to "Groceries",
-        "ΜΑΣΟΥΤΗΣ" to "Groceries",
-        "ΚΡΗΤΙΚΟΣ" to "Groceries",
-        "LIDL" to "Groceries",
+        "ΣΚΛΑΒΕΝΙΤΗΣ" to ExpenseCategory.GROCERIES,
+        "ΓΑΛΑΞΙΑΣ" to ExpenseCategory.GROCERIES,
+        "ΑΒ ΒΑΣΙΛΟΠΟΥΛΟΣ" to ExpenseCategory.GROCERIES,
+        "ΜΑΣΟΥΤΗΣ" to ExpenseCategory.GROCERIES,
+        "ΚΡΗΤΙΚΟΣ" to ExpenseCategory.GROCERIES,
+        "LIDL" to ExpenseCategory.GROCERIES,
 
-        "ZARA" to "Shopping",
-        "H&M" to "Shopping",
-        "PULL&BEAR" to "Shopping",
-        "BERSHKA" to "Shopping",
-        "NIKE" to "Shopping",
-        "ADIDAS" to "Shopping",
-        "COSMOS SPORT" to "Shopping",
-        "JD" to "Shopping",
-        "PLAISIO" to "Shopping",
-        "PUBLIC" to "Shopping",
-        "ΚΩΤΣΟΒΟΛΟΣ" to "Shopping",
-        "ΓΕΡΜΑΝΟΣ" to "Shopping",
+        "ZARA" to ExpenseCategory.SHOPPING,
+        "H&M" to ExpenseCategory.SHOPPING,
+        "PULL&BEAR" to ExpenseCategory.SHOPPING,
+        "BERSHKA" to ExpenseCategory.SHOPPING,
+        "NIKE" to ExpenseCategory.SHOPPING,
+        "ADIDAS" to ExpenseCategory.SHOPPING,
+        "COSMOS SPORT" to ExpenseCategory.SHOPPING,
+        "JD" to ExpenseCategory.SHOPPING,
+        "PLAISIO" to ExpenseCategory.SHOPPING,
+        "PUBLIC" to ExpenseCategory.SHOPPING,
+        "ΚΩΤΣΟΒΟΛΟΣ" to ExpenseCategory.SHOPPING,
+        "ΓΕΡΜΑΝΟΣ" to ExpenseCategory.SHOPPING,
 
-        "VILLAGE" to "Entertainment",
-        "OPTIONS" to "Entertainment",
+        "VILLAGE" to ExpenseCategory.ENTERTAINMENT,
+        "OPTIONS" to ExpenseCategory.ENTERTAINMENT,
 
-        "Ο.Α.Σ.Α." to "Transport & Fuel",
-        "ΣΤΑ.ΣΥ." to "Transport & Fuel",
-        "EKO" to "Transport & Fuel",
-        "BP" to "Transport & Fuel",
-        "SHELL" to "Transport & Fuel",
-        "ETEKA" to "Transport & Fuel",
-        "REVOIL" to "Transport & Fuel",
-        "ΕΛΙΝ" to "Transport & Fuel",
-        "AVIN" to "Transport & Fuel",
+        "Ο.Α.Σ.Α." to ExpenseCategory.TRANSPORT_FUEL,
+        "ΣΤΑ.ΣΥ." to ExpenseCategory.TRANSPORT_FUEL,
+        "EKO" to ExpenseCategory.TRANSPORT_FUEL,
+        "BP" to ExpenseCategory.TRANSPORT_FUEL,
+        "SHELL" to ExpenseCategory.TRANSPORT_FUEL,
+        "ETEKA" to ExpenseCategory.TRANSPORT_FUEL,
+        "REVOIL" to ExpenseCategory.TRANSPORT_FUEL,
+        "ΕΛΙΝ" to ExpenseCategory.TRANSPORT_FUEL,
+        "AVIN" to ExpenseCategory.TRANSPORT_FUEL,
 
-        "ΓΡΗΓΟΡΗΣ" to "Food & Drink",
-        "EVEREST" to "Food & Drink",
-        "COFFEE ISLAND" to "Food & Drink",
-        "IL TOTO" to "Food & Drink",
-        "STARBUCKS" to "Food & Drink",
-        "COFFEE BERRY" to "Food & Drink",
-        "MCDONALD'S" to "Food & Drink",
-        "JACKAROO" to "Food & Drink",
-        "KFC" to "Food & Drink",
-        "PIZZA FAN" to "Food & Drink",
-        "DOMINO'S" to "Food & Drink",
-        "PIZZA HUT" to "Food & Drink",
-        "GOODY'S" to "Food & Drink",
-        "BREAD FACTORY" to "Food & Drink",
-        "ΣΤΕΡΓΙΟΥ" to "Food & Drink",
-        "NANOU" to "Food & Drink",
-        "EFOOD" to "Food & Drink",
-        "WOLT" to "Food & Drink",
-        "BOX" to "Food & Drink",
+        "ΓΡΗΓΟΡΗΣ" to ExpenseCategory.FOOD_DRINK,
+        "EVEREST" to ExpenseCategory.FOOD_DRINK,
+        "COFFEE ISLAND" to ExpenseCategory.FOOD_DRINK,
+        "IL TOTO" to ExpenseCategory.FOOD_DRINK,
+        "STARBUCKS" to ExpenseCategory.FOOD_DRINK,
+        "COFFEE BERRY" to ExpenseCategory.FOOD_DRINK,
+        "MCDONALD'S" to ExpenseCategory.FOOD_DRINK,
+        "JACKAROO" to ExpenseCategory.FOOD_DRINK,
+        "KFC" to ExpenseCategory.FOOD_DRINK,
+        "PIZZA FAN" to ExpenseCategory.FOOD_DRINK,
+        "DOMINO'S" to ExpenseCategory.FOOD_DRINK,
+        "PIZZA HUT" to ExpenseCategory.FOOD_DRINK,
+        "GOODY'S" to ExpenseCategory.FOOD_DRINK,
+        "BREAD FACTORY" to ExpenseCategory.FOOD_DRINK,
+        "ΣΤΕΡΓΙΟΥ" to ExpenseCategory.FOOD_DRINK,
+        "NANOU" to ExpenseCategory.FOOD_DRINK,
+        "EFOOD" to ExpenseCategory.FOOD_DRINK,
+        "WOLT" to ExpenseCategory.FOOD_DRINK,
+        "BOX" to ExpenseCategory.FOOD_DRINK,
 
-        "YAVA" to "Health & Fitness",
-        "PLANET FITNESS" to "Health & Fitness",
-        "ALTERLIFE" to "Health & Fitness",
+        "YAVA" to ExpenseCategory.HEALTH_FITNESS,
+        "PLANET FITNESS" to ExpenseCategory.HEALTH_FITNESS,
+        "ALTERLIFE" to ExpenseCategory.HEALTH_FITNESS,
 
-        "COSMOTE" to "Bills & Utilities",
-        "NOVA" to "Bills & Utilities",
-        "VODAFONE" to "Bills & Utilities",
-        "INALAN" to "Bills & Utilities",
-        "ΔΕΗ" to "Bills & Utilities",
-        "PROTERGIA" to "Bills & Utilities",
-        "ΕΥΔΑΠ" to "Bills & Utilities"
+        "COSMOTE" to ExpenseCategory.BILLS_UTILITIES,
+        "NOVA" to ExpenseCategory.BILLS_UTILITIES,
+        "VODAFONE" to ExpenseCategory.BILLS_UTILITIES,
+        "INALAN" to ExpenseCategory.BILLS_UTILITIES,
+        "ΔΕΗ" to ExpenseCategory.BILLS_UTILITIES,
+        "PROTERGIA" to ExpenseCategory.BILLS_UTILITIES,
+        "ΕΥΔΑΠ" to ExpenseCategory.BILLS_UTILITIES
     )
 
     // Common greek company suffixes to ignore
@@ -80,9 +81,9 @@ class StoreNameMatcher @Inject constructor(
         "ΜΙΚΕ", "MIKE", "ΜΕΠΕ", "MEPE", "ΑΕΒΕ", "AEBE"
     )
 
-    fun matchStoreName(upperText: String, userDictionary: Map<String, String>): Pair<String, String> {
+    fun matchStoreName(upperText: String, userDictionary: Map<String, ExpenseCategory>): Pair<String, ExpenseCategory> {
         var finalStore = ""
-        var finalCategory = "Other"
+        var finalCategory = ExpenseCategory.OTHER
 
         // Remove punctuation for store name matching
         val cleanTextForNames = upperText

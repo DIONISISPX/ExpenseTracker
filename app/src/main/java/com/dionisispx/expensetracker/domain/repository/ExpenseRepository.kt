@@ -2,6 +2,7 @@ package com.dionisispx.expensetracker.domain.repository
 
 import com.dionisispx.expensetracker.domain.model.Expense
 import kotlinx.coroutines.flow.Flow
+import java.time.Instant
 
 // Contract for expense data operations
 interface ExpenseRepository {
@@ -10,14 +11,14 @@ interface ExpenseRepository {
     fun getAllExpenses(): Flow<List<Expense>>
 
     // Fetch expenses by date range
-    fun getExpensesByDateRange(startDate: Long, endDate: Long): Flow<List<Expense>>
+    fun getExpensesByDateRange(startDate: Instant, endDate: Instant): Flow<List<Expense>>
 
     // Save a new expense
-    suspend fun insertExpense(expense: Expense)
+    suspend fun insertExpense(expense: Expense): Result<Unit>
 
     // Delete an existing expense
-    suspend fun deleteExpense(expense: Expense)
+    suspend fun deleteExpense(expense: Expense): Result<Unit>
 
     // Delete all expenses
-    suspend fun deleteAllExpenses()
+    suspend fun deleteAllExpenses(): Result<Unit>
 }

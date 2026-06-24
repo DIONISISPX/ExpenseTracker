@@ -61,10 +61,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dionisispx.expensetracker.R
-import com.dionisispx.expensetracker.presentation.BudgetViewModel
+import com.dionisispx.expensetracker.presentation.budget.BudgetViewModel
 import com.dionisispx.expensetracker.domain.model.Expense
+import com.dionisispx.expensetracker.domain.model.ExpenseCategory
 import com.dionisispx.expensetracker.presentation.util.CurrencyUtils
-import com.dionisispx.expensetracker.presentation.PreferencesViewModel
+import com.dionisispx.expensetracker.presentation.preferences.PreferencesViewModel
 import com.dionisispx.expensetracker.presentation.util.getCategoryDetails
 import com.dionisispx.expensetracker.presentation.util.getLocalizedCategoryName
 import java.util.Locale
@@ -84,7 +85,7 @@ fun BudgetSettingsScreen(
 
     // Local state variables for input handling
     var overallBudgetInput by remember { mutableStateOf("") }
-    var categoryLimits by remember { mutableStateOf<Map<String, Float>>(emptyMap()) }
+    var categoryLimits by remember { mutableStateOf<Map<ExpenseCategory, Float>>(emptyMap()) }
     var isInitialized by remember { mutableStateOf(false) }
 
     // Load data once when it arrives from view model
@@ -105,11 +106,7 @@ fun BudgetSettingsScreen(
     val cardColor = MaterialTheme.colorScheme.surfaceVariant
 
     // Define categories with vibrant colors to match the donut chart
-    val categories = listOf(
-        "Groceries", "Food & Drink", "Transport & Fuel", "Shopping",
-        "Entertainment", "Bills & Utilities", "Health & Fitness",
-        "Travel", "Home", "Education", "Personal Care", "Other"
-    ).map { categoryName ->
+    val categories = ExpenseCategory.entries.map { categoryName ->
         val localizedName = getLocalizedCategoryName(categoryName)
         val details = getCategoryDetails(categoryName)
         CategoryData(categoryName, localizedName, details.first, details.second)
@@ -307,7 +304,7 @@ fun BudgetSettingsScreen(
 }
 
 // Data class to hold category visual info
-data class CategoryData(val internalName: String, val displayName: String, val icon: ImageVector, val color: Color)
+data class CategoryData(val internalName: ExpenseCategory, val displayName: String, val icon: ImageVector, val color: Color)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

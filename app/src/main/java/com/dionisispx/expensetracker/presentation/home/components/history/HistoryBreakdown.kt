@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.dionisispx.expensetracker.domain.model.Expense
-import com.dionisispx.expensetracker.presentation.ExpenseViewModel
 import com.dionisispx.expensetracker.presentation.home.components.charts.YearlyBarChart
 
 @Composable
@@ -22,15 +21,16 @@ fun HistoryBreakdown(
     isLandscape: Boolean,
     showRemaining: Boolean,
     totalBudget: Float,
-    expenseViewModel: ExpenseViewModel,
+    onPreviousYearClick: () -> Unit,
+    onNextYearClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (isLandscape) {
         Column(modifier = modifier) {
             HistoryHeader(
                 currentYear = currentYear,
-                onPreviousYearClick = { expenseViewModel.previousYear() },
-                onNextYearClick = { expenseViewModel.nextYear() }
+                onPreviousYearClick = onPreviousYearClick,
+                onNextYearClick = onNextYearClick
             )
             Row(modifier = Modifier.fillMaxWidth().weight(1f)) {
                 Column(
@@ -65,8 +65,8 @@ fun HistoryBreakdown(
         Column(modifier = modifier.verticalScroll(rememberScrollState())) {
             HistoryHeader(
                 currentYear = currentYear,
-                onPreviousYearClick = { expenseViewModel.previousYear() },
-                onNextYearClick = { expenseViewModel.nextYear() }
+                onPreviousYearClick = onPreviousYearClick,
+                onNextYearClick = onNextYearClick
             )
             YearlyBarChart(
                 monthlyTotals = monthlyTotals,

@@ -43,7 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dionisispx.expensetracker.R
-import com.dionisispx.expensetracker.presentation.PreferencesViewModel
+import com.dionisispx.expensetracker.presentation.preferences.PreferencesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

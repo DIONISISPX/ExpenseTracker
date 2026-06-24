@@ -6,6 +6,13 @@ import com.dionisispx.expensetracker.data.local.ExpenseDao
 import com.dionisispx.expensetracker.data.local.ExpenseDatabase
 import com.dionisispx.expensetracker.data.repository.ExpenseRepositoryImpl
 import com.dionisispx.expensetracker.domain.repository.ExpenseRepository
+import com.dionisispx.expensetracker.data.repository.VisionRepositoryImpl
+import com.dionisispx.expensetracker.domain.repository.VisionRepository
+import com.dionisispx.expensetracker.data.util.AndroidImageProcessor
+import com.dionisispx.expensetracker.domain.util.ImageProcessor
+import com.dionisispx.expensetracker.data.repository.UserPreferencesRepositoryImpl
+import com.dionisispx.expensetracker.domain.repository.UserPreferencesRepository
+import com.dionisispx.expensetracker.data.remote.VisionApi
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -26,20 +33,20 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindVisionRepository(
-        visionRepositoryImpl: com.dionisispx.expensetracker.data.repository.VisionRepositoryImpl
-    ): com.dionisispx.expensetracker.domain.repository.VisionRepository
+        visionRepositoryImpl: VisionRepositoryImpl
+    ): VisionRepository
 
     @Binds
     @Singleton
     abstract fun bindImageProcessor(
-        androidImageProcessor: com.dionisispx.expensetracker.data.util.AndroidImageProcessor
-    ): com.dionisispx.expensetracker.domain.util.ImageProcessor
+        androidImageProcessor: AndroidImageProcessor
+    ): ImageProcessor
 
     @Binds
     @Singleton
     abstract fun bindUserPreferencesRepository(
-        userPreferencesRepositoryImpl: com.dionisispx.expensetracker.data.repository.UserPreferencesRepositoryImpl
-    ): com.dionisispx.expensetracker.domain.repository.UserPreferencesRepository
+        userPreferencesRepositoryImpl: UserPreferencesRepositoryImpl
+    ): UserPreferencesRepository
 
     companion object {
         @Provides
@@ -62,12 +69,12 @@ abstract class AppModule {
 
         @Provides
         @Singleton
-        fun provideVisionApi(): com.dionisispx.expensetracker.data.remote.VisionApi {
+        fun provideVisionApi(): VisionApi {
             return retrofit2.Retrofit.Builder()
                 .baseUrl("https://vision.googleapis.com/")
                 .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create())
                 .build()
-                .create(com.dionisispx.expensetracker.data.remote.VisionApi::class.java)
+                .create(VisionApi::class.java)
         }
     }
 }

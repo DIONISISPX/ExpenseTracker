@@ -38,9 +38,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dionisispx.expensetracker.R
-import com.dionisispx.expensetracker.presentation.ExpenseViewModel
-import com.dionisispx.expensetracker.presentation.BudgetViewModel
-import com.dionisispx.expensetracker.presentation.PreferencesViewModel
+import com.dionisispx.expensetracker.presentation.expense.ExpenseViewModel
+import com.dionisispx.expensetracker.presentation.budget.BudgetViewModel
+import com.dionisispx.expensetracker.presentation.preferences.PreferencesViewModel
 import com.dionisispx.expensetracker.presentation.home.components.dashboard.MonthSelectorAndChart
 import com.dionisispx.expensetracker.presentation.home.components.dashboard.SubTabPager
 import com.dionisispx.expensetracker.presentation.home.components.history.HistoryBreakdown
@@ -167,7 +167,6 @@ fun HomeScreen(
                     }
                 }
             } else {
-                // History tab securely fills remaining weight
                 HistoryBreakdown(
                     yearlyExpenses = yearlyExpenses,
                     monthlyTotals = monthlyTotals,
@@ -176,7 +175,8 @@ fun HomeScreen(
                     isLandscape = isLandscape,
                     showRemaining = showRemaining,
                     totalBudget = totalBudget.toFloat(),
-                    expenseViewModel = expenseViewModel,
+                    onPreviousYearClick = { expenseViewModel.previousYear() },
+                    onNextYearClick = { expenseViewModel.nextYear() },
                     modifier = Modifier.weight(1f).fillMaxWidth()
                 )
             }

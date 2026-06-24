@@ -34,9 +34,11 @@ import com.dionisispx.expensetracker.presentation.util.getCategoryDetails
 import com.dionisispx.expensetracker.presentation.util.getLocalizedCategoryName
 import java.util.Locale
 
+import com.dionisispx.expensetracker.domain.model.ExpenseCategory
+
 @Composable
 fun CategoryProgressRow(
-    categoryName: String,
+    categoryName: ExpenseCategory,
     spentAmount: Float,
     limitAmount: Float,
     currencySymbol: String
@@ -74,7 +76,7 @@ fun CategoryProgressRow(
             ) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = categoryName,
+                    contentDescription = categoryName.displayName,
                     tint = iconTint
                 )
             }

@@ -85,7 +85,7 @@ fun ExpenseItem(
             ) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = expense.category,
+                    contentDescription = expense.category.displayName,
                     tint = iconTint
                 )
             }

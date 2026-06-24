@@ -1,4 +1,4 @@
-package com.dionisispx.expensetracker.presentation
+package com.dionisispx.expensetracker.presentation.preferences
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

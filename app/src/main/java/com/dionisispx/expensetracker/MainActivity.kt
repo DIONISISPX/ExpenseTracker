@@ -14,7 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.dionisispx.expensetracker.presentation.PreferencesViewModel
+import com.dionisispx.expensetracker.presentation.preferences.PreferencesViewModel
 import com.dionisispx.expensetracker.presentation.navigation.MainScreen
 import com.dionisispx.expensetracker.ui.theme.ExpenseTrackerTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -37,12 +37,16 @@ class MainActivity : ComponentActivity() {
             }
 
             val context = LocalContext.current
-            val currentConfig = LocalConfiguration.current
-
-            // Create localized configuration
-            val localizedConfig = remember(languagePreference, currentConfig) {
-                val locale = Locale.forLanguageTag(languagePreference)
+            val locale = remember(languagePreference) { Locale.forLanguageTag(languagePreference) }
+            
+            androidx.compose.runtime.LaunchedEffect(locale) {
                 Locale.setDefault(locale)
+            }
+            
+            val currentConfig = LocalConfiguration.current
+            
+            // Create localized configuration
+            val localizedConfig = remember(locale, currentConfig) {
                 Configuration(currentConfig).apply {
                     setLocale(locale)
                     setLayoutDirection(locale)

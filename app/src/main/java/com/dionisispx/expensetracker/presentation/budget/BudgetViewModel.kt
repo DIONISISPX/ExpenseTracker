@@ -1,7 +1,8 @@
-package com.dionisispx.expensetracker.presentation
+package com.dionisispx.expensetracker.presentation.budget
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dionisispx.expensetracker.domain.model.ExpenseCategory
 import com.dionisispx.expensetracker.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,11 +25,11 @@ class BudgetViewModel @Inject constructor(
         viewModelScope, SharingStarted.WhileSubscribed(5000), 1000
     )
 
-    val categoryLimits: StateFlow<Map<String, Float>> = prefsRepository.categoryLimits.stateIn(
+    val categoryLimits: StateFlow<Map<ExpenseCategory, Float>> = prefsRepository.categoryLimits.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap()
     )
 
-    fun saveBudgetAndLimits(budget: Int, limits: Map<String, Float>) {
+    fun saveBudgetAndLimits(budget: Int, limits: Map<ExpenseCategory, Float>) {
         viewModelScope.launch {
             prefsRepository.saveTotalBudget(budget)
             prefsRepository.saveCategoryLimits(limits)

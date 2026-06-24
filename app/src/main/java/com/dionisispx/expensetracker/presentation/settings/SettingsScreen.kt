@@ -56,9 +56,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.domain.model.Expense
-import com.dionisispx.expensetracker.presentation.PreferencesViewModel
-import com.dionisispx.expensetracker.presentation.ExpenseViewModel
-import com.dionisispx.expensetracker.presentation.BudgetViewModel
+import com.dionisispx.expensetracker.presentation.preferences.PreferencesViewModel
+import com.dionisispx.expensetracker.presentation.expense.ExpenseViewModel
+import com.dionisispx.expensetracker.presentation.budget.BudgetViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -511,9 +511,9 @@ private fun generateCsvContent(expenses: List<Expense>, currency: String): Strin
     val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
 
     expenses.forEach { expense ->
-        val dateString = dateFormat.format(Date(expense.date))
+        val dateString = dateFormat.format(Date(expense.date.toEpochMilli()))
         val store = escapeCsvField(expense.storeName)
-        val category = escapeCsvField(expense.category)
+        val category = escapeCsvField(expense.category.displayName)
         sb.append("$store,$category,${expense.amount},$dateString\n")
     }
     return sb.toString()

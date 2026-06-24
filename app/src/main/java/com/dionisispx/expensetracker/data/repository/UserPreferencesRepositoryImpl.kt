@@ -11,6 +11,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.json.JSONObject
+import com.dionisispx.expensetracker.domain.model.ExpenseCategory
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -40,16 +41,17 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     }
 
     // Observes and deserializes category-specific budgets
-    override val categoryLimits: Flow<Map<String, Float>> = context.dataStore.data.map { preferences ->
+    override val categoryLimits: Flow<Map<ExpenseCategory, Float>> = context.dataStore.data.map { preferences ->
         val jsonString = preferences[categoryLimitsKey] ?: "{}"
         try {
             val jsonObject = JSONObject(jsonString)
-            val map = mutableMapOf<String, Float>()
+            val map = mutableMapOf<ExpenseCategory, Float>()
             jsonObject.keys().forEach { key ->
-                map[key] = jsonObject.getDouble(key).toFloat()
+                map[ExpenseCategory.fromDisplayName(key)] = jsonObject.getDouble(key).toFloat()
             }
             map
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            android.util.Log.e("UserPrefsRepo", "Error deserializing category limits", e)
             emptyMap()
         }
     }
@@ -84,11 +86,11 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     }
 
     // Serializes and persists category-specific budgets
-    override suspend fun saveCategoryLimits(limits: Map<String, Float>) {
+    override suspend fun saveCategoryLimits(limits: Map<ExpenseCategory, Float>) {
         context.dataStore.edit { preferences ->
             val jsonObject = JSONObject()
             limits.forEach { (key, value) ->
-                jsonObject.put(key, value.toDouble())
+                jsonObject.put(key.displayName, value.toDouble())
             }
             preferences[categoryLimitsKey] = jsonObject.toString()
         }

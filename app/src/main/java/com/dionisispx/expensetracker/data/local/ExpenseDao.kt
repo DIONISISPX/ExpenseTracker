@@ -7,6 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.dionisispx.expensetracker.data.local.entity.ExpenseEntity
 import kotlinx.coroutines.flow.Flow
+import java.time.Instant
 
 // Defines data access methods for expense records
 @Dao
@@ -26,7 +27,7 @@ interface ExpenseDao {
 
     // Retrieves a reactive stream of expenses within a timeframe
     @Query("SELECT * FROM expenses_table WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
-    fun getExpensesByDateRange(startDate: Long, endDate: Long): Flow<List<ExpenseEntity>>
+    fun getExpensesByDateRange(startDate: Instant, endDate: Instant): Flow<List<ExpenseEntity>>
 
     // Clears all expense records
     @Query("DELETE FROM expenses_table")

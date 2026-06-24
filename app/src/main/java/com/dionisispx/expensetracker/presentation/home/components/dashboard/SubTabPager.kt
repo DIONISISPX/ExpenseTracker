@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.dionisispx.expensetracker.domain.model.Expense
 
+import com.dionisispx.expensetracker.domain.model.ExpenseCategory
 import com.dionisispx.expensetracker.presentation.home.components.ExpenseItem
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -22,7 +23,7 @@ import com.dionisispx.expensetracker.presentation.home.components.ExpenseItem
 fun SubTabPager(
     pagerState: PagerState,
     expenses: List<Expense>,
-    categoryLimits: Map<String, Float>,
+    categoryLimits: Map<ExpenseCategory, Float>,
     totalBudget: Float,
     currencyPreference: String,
     onDeleteExpense: (Expense) -> Unit

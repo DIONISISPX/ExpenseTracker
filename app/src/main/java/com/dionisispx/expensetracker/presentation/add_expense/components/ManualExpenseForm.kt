@@ -31,33 +31,23 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.unit.dp
 import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.domain.model.Expense
-
+import com.dionisispx.expensetracker.domain.model.ExpenseCategory
+import com.dionisispx.expensetracker.presentation.util.getLocalizedCategoryName
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManualExpenseForm(
     storeName: String, onStoreNameChange: (String) -> Unit,
     amount: String, onAmountChange: (String) -> Unit,
-    category: String, onCategoryChange: (String) -> Unit,
+    category: ExpenseCategory, onCategoryChange: (ExpenseCategory) -> Unit,
     currencySymbol: String,
     onNavigateBack: () -> Unit,
     onSaveExpense: (Expense) -> Unit
 ) {
     var isDropdownExpanded by remember { mutableStateOf(false) }
-    val categories = listOf(
-        Pair("Groceries", stringResource(R.string.cat_groceries)),
-        Pair("Food & Drink", stringResource(R.string.cat_food_drink)),
-        Pair("Transport & Fuel", stringResource(R.string.cat_transport)),
-        Pair("Shopping", stringResource(R.string.cat_shopping)),
-        Pair("Entertainment", stringResource(R.string.cat_entertainment)),
-        Pair("Bills & Utilities", stringResource(R.string.cat_bills)),
-        Pair("Health & Fitness", stringResource(R.string.cat_health)),
-        Pair("Travel", stringResource(R.string.cat_travel)),
-        Pair("Home", stringResource(R.string.cat_home)),
-        Pair("Education", stringResource(R.string.cat_education)),
-        Pair("Personal Care", stringResource(R.string.cat_personal)),
-        Pair("Other", stringResource(R.string.cat_other))
-    )
+    val categories = ExpenseCategory.entries.map {
+        Pair(it, getLocalizedCategoryName(it))
+    }
 
     val amountLabel = if (currencySymbol == "$") {
         stringResource(R.string.amount_label_left, currencySymbol)
@@ -127,7 +117,7 @@ fun ManualExpenseForm(
                         storeName = storeName.uppercase(),
                         amount = amount.replace(",", ".").toDoubleOrNull() ?: 0.0,
                         category = category,
-                        date = System.currentTimeMillis()
+                        date = java.time.Instant.now()
                     )
                     onSaveExpense(newExpense)
                     onNavigateBack()

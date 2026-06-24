@@ -1,5 +1,7 @@
 package com.dionisispx.expensetracker.presentation.util
 
+import com.dionisispx.expensetracker.domain.model.ExpenseCategory
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
@@ -19,38 +21,38 @@ import androidx.compose.material.icons.filled.Spa
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 
-fun getCategoryDetails(category: String): Pair<ImageVector, Color> {
+fun getCategoryDetails(category: ExpenseCategory): Pair<ImageVector, Color> {
     return when (category) {
-        "Groceries" -> Icons.Default.ShoppingCart to Color(0xFF81C784)
-        "Food & Drink" -> Icons.Default.Restaurant to Color(0xFFFF8A65)
-        "Transport & Fuel" -> Icons.Default.DirectionsCar to Color(0xFF64B5F6)
-        "Shopping" -> Icons.Default.LocalMall to Color(0xFFBA68C8)
-        "Entertainment" -> Icons.Default.Movie to Color(0xFFFFD54F)
-        "Bills & Utilities" -> Icons.Default.Receipt to Color(0xFF4DB6AC)
-        "Health & Fitness" -> Icons.Default.Favorite to Color(0xFFE57373)
-        "Travel" -> Icons.Default.Flight to Color(0xFF7986CB)
-        "Home" -> Icons.Default.Home to Color(0xFFA1887F)
-        "Education" -> Icons.Default.School to Color(0xFFFFB74D)
-        "Personal Care" -> Icons.Default.Spa to Color(0xFFF06292)
-        else -> Icons.Default.MoreHoriz to Color(0xFF90A4AE)
+        ExpenseCategory.GROCERIES -> Icons.Default.ShoppingCart to Color(0xFF81C784)
+        ExpenseCategory.FOOD_DRINK -> Icons.Default.Restaurant to Color(0xFFFF8A65)
+        ExpenseCategory.TRANSPORT_FUEL -> Icons.Default.DirectionsCar to Color(0xFF64B5F6)
+        ExpenseCategory.SHOPPING -> Icons.Default.LocalMall to Color(0xFFBA68C8)
+        ExpenseCategory.ENTERTAINMENT -> Icons.Default.Movie to Color(0xFFFFD54F)
+        ExpenseCategory.BILLS_UTILITIES -> Icons.Default.Receipt to Color(0xFF4DB6AC)
+        ExpenseCategory.HEALTH_FITNESS -> Icons.Default.Favorite to Color(0xFFE57373)
+        ExpenseCategory.TRAVEL -> Icons.Default.Flight to Color(0xFF7986CB)
+        ExpenseCategory.HOME -> Icons.Default.Home to Color(0xFFA1887F)
+        ExpenseCategory.EDUCATION -> Icons.Default.School to Color(0xFFFFB74D)
+        ExpenseCategory.PERSONAL_CARE -> Icons.Default.Spa to Color(0xFFF06292)
+        ExpenseCategory.OTHER -> Icons.Default.MoreHoriz to Color(0xFF90A4AE)
     }
 }
 
 @Composable
-fun getLocalizedCategoryName(category: String): String {
+fun getLocalizedCategoryName(category: ExpenseCategory): String {
     val resId = when (category) {
-        "Groceries" -> R.string.cat_groceries
-        "Food & Drink" -> R.string.cat_food_drink
-        "Transport & Fuel" -> R.string.cat_transport
-        "Shopping" -> R.string.cat_shopping
-        "Entertainment" -> R.string.cat_entertainment
-        "Bills & Utilities" -> R.string.cat_bills
-        "Health & Fitness" -> R.string.cat_health
-        "Travel" -> R.string.cat_travel
-        "Home" -> R.string.cat_home
-        "Education" -> R.string.cat_education
-        "Personal Care" -> R.string.cat_personal
-        else -> R.string.cat_other
+        ExpenseCategory.GROCERIES -> R.string.cat_groceries
+        ExpenseCategory.FOOD_DRINK -> R.string.cat_food_drink
+        ExpenseCategory.TRANSPORT_FUEL -> R.string.cat_transport
+        ExpenseCategory.SHOPPING -> R.string.cat_shopping
+        ExpenseCategory.ENTERTAINMENT -> R.string.cat_entertainment
+        ExpenseCategory.BILLS_UTILITIES -> R.string.cat_bills
+        ExpenseCategory.HEALTH_FITNESS -> R.string.cat_health
+        ExpenseCategory.TRAVEL -> R.string.cat_travel
+        ExpenseCategory.HOME -> R.string.cat_home
+        ExpenseCategory.EDUCATION -> R.string.cat_education
+        ExpenseCategory.PERSONAL_CARE -> R.string.cat_personal
+        ExpenseCategory.OTHER -> R.string.cat_other
     }
     return stringResource(resId)
 }

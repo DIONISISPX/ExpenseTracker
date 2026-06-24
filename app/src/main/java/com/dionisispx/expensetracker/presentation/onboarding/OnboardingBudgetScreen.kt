@@ -41,8 +41,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dionisispx.expensetracker.R
-import com.dionisispx.expensetracker.presentation.BudgetViewModel
-import com.dionisispx.expensetracker.presentation.PreferencesViewModel
+import com.dionisispx.expensetracker.presentation.budget.BudgetViewModel
+import com.dionisispx.expensetracker.presentation.preferences.PreferencesViewModel
 import com.dionisispx.expensetracker.presentation.budget.MinimalistIntegerInput
 
 @OptIn(ExperimentalMaterial3Api::class)
