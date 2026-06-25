@@ -51,6 +51,12 @@ import com.dionisispx.expensetracker.R
 import com.dionisispx.expensetracker.presentation.add_expense.CameraPreview
 import java.io.File
 import android.media.MediaActionSound
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.State
 
 // Displays the camera UI for taking or picking a receipt photo
 @Composable
@@ -58,7 +64,8 @@ fun CameraUI(
     isProcessing: Boolean,
     onImageSelected: (String) -> Unit
 ) {
-    // 1. Initialize context, camera and shutter sound
+    // 1. Initialize network state, context, camera and shutter sound
+    val isNetworkAvailable = rememberIsNetworkAvailable()
     val context = LocalContext.current
     val imageCapture = remember { ImageCapture.Builder().build() }
     val sound = remember { MediaActionSound().apply { load(MediaActionSound.SHUTTER_CLICK) } }
@@ -97,6 +104,24 @@ fun CameraUI(
                 imageCapture = imageCapture,
                 flashEnabled = flashEnabled
             )
+            
+            // 6. Show internet requirement warning if disconnected
+            if (!isNetworkAvailable.value) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                        .background(Color.Black.copy(alpha = 0.5f))
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.internet_required_for_scan),
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
         } else {
             Box(modifier = Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
                 Text(stringResource(R.string.camera_permission_required), color = Color.White)
@@ -179,4 +204,40 @@ private fun takePhoto(context: Context, imageCapture: ImageCapture, onPhotoTaken
             Log.e("Camera", "Capture failed", exc)
         }
     })
+}
+
+// Tracks network connectivity state to notify the user if OCR is unavailable
+@Composable
+fun rememberIsNetworkAvailable(): State<Boolean> {
+    val context = LocalContext.current
+    val isAvailable = remember { mutableStateOf(checkNetworkAvailable(context)) }
+    
+    DisposableEffect(context) {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                isAvailable.value = true
+            }
+            override fun onLost(network: Network) {
+                isAvailable.value = false
+            }
+        }
+        val request = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+        connectivityManager.registerNetworkCallback(request, networkCallback)
+        
+        onDispose {
+            connectivityManager.unregisterNetworkCallback(networkCallback)
+        }
+    }
+    return isAvailable
+}
+
+// Helper function to synchronously check current network connectivity
+private fun checkNetworkAvailable(context: Context): Boolean {
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val network = connectivityManager.activeNetwork ?: return false
+    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
 }

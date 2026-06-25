@@ -73,6 +73,7 @@
     <string name="tab_camera">Κάμερα</string>
     <string name="tab_manual">Χειροκίνητη Προσθήκη</string>
     <string name="camera_permission_required">Απαιτείται άδεια κάμερας</string>
+    <string name="internet_required_for_scan">Απαιτείται σύνδεση στο διαδίκτυο για την AI ανάλυση</string>
     <string name="analyzing_receipt">Ανάλυση απόδειξης με AI…</string>
     <string name="store_name">Όνομα Καταστήματος</string>
     <string name="store_name_placeholder">π.χ. ΣΚΛΑΒΕΝΙΤΗΣ</string>

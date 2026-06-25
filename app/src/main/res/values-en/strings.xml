@@ -73,6 +73,7 @@
     <string name="tab_camera">Camera</string>
     <string name="tab_manual">Manual Entry</string>
     <string name="camera_permission_required">Camera permission is required</string>
+    <string name="internet_required_for_scan">Internet connection is required for AI analysis</string>
     <string name="analyzing_receipt">Analyzing receipt with AI…</string>
     <string name="store_name">Store Name</string>
     <string name="store_name_placeholder">e.g. WALMART</string>
