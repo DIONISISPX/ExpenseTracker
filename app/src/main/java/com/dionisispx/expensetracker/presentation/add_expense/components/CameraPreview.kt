@@ -1,4 +1,4 @@
-package com.dionisispx.expensetracker.presentation.add_expense
+package com.dionisispx.expensetracker.presentation.add_expense.components
 
 import android.util.Log
 import android.view.ViewGroup

@@ -48,7 +48,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.dionisispx.expensetracker.R
-import com.dionisispx.expensetracker.presentation.add_expense.CameraPreview
 import java.io.File
 import android.media.MediaActionSound
 import android.net.ConnectivityManager

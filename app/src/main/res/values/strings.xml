@@ -49,6 +49,10 @@
     <string name="currency_euro">(€) Ευρώ</string>
     <string name="currency_dollar">($) Δολάριο</string>
     <string name="export_csv">Εξαγωγή σε CSV</string>
+    <string name="csv_header_store">Κατάστημα</string>
+    <string name="csv_header_category">Κατηγορία</string>
+    <string name="csv_header_amount">Ποσό</string>
+    <string name="csv_header_date">Ημερομηνία</string>
     <string name="clear_data">Διαγραφή όλων των δεδομένων</string>
     <string name="wipe_data_title">Διαγραφή όλων των δεδομένων</string>
     <string name="wipe_data_message">Είστε σίγουροι ότι θέλετε να διαγράψετε όλα τα έξοδα και να επαναφέρετε τα όρια προϋπολογισμού; Αυτή η ενέργεια δεν αναιρείται.</string>

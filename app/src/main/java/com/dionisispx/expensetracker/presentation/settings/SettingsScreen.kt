@@ -1,9 +1,11 @@
 package com.dionisispx.expensetracker.presentation.settings
 
+import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import com.dionisispx.expensetracker.presentation.util.getCategoryStringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -121,7 +123,7 @@ fun SettingsScreen(
                 coroutineScope.launch {
                     try {
                         val allExpenses = expenseViewModel.getAllExpensesSnapshot()
-                        val csvData = generateCsvContent(allExpenses, currentCurrency)
+                        val csvData = generateCsvContent(context, allExpenses, currentCurrency, currentLanguage)
 
                         context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                             outputStream.write(csvData.toByteArray())
@@ -510,16 +512,23 @@ private fun escapeCsvField(field: String): String {
 }
 
 // Generates CSV content from the list of expenses
-private fun generateCsvContent(expenses: List<Expense>, currency: String): String {
+private fun generateCsvContent(context: Context, expenses: List<Expense>, currency: String, language: String): String {
     val sb = StringBuilder()
-    sb.append("Store,Category,Amount ($currency),Date\n")
+    
+    val storeHeader = context.getString(R.string.csv_header_store)
+    val categoryHeader = context.getString(R.string.csv_header_category)
+    val amountHeader = context.getString(R.string.csv_header_amount)
+    val dateHeader = context.getString(R.string.csv_header_date)
+    
+    sb.append("$storeHeader,$categoryHeader,$amountHeader ($currency),$dateHeader\n")
 
-    val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+    val locale = Locale.forLanguageTag(language)
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", locale)
 
     expenses.forEach { expense ->
         val dateString = dateFormat.format(Date(expense.date.toEpochMilli()))
         val store = escapeCsvField(expense.storeName)
-        val category = escapeCsvField(expense.category.displayName)
+        val category = escapeCsvField(context.getString(getCategoryStringRes(expense.category)))
         sb.append("$store,$category,${expense.amount},$dateString\n")
     }
     return sb.toString()

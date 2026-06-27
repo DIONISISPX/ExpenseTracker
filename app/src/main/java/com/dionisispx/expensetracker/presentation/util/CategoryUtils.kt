@@ -39,10 +39,9 @@ fun getCategoryDetails(category: ExpenseCategory): Pair<ImageVector, Color> {
     }
 }
 
-@Composable
-// Get localized string representation of an expense category
-fun getLocalizedCategoryName(category: ExpenseCategory): String {
-    val resId = when (category) {
+// Get the string resource ID for an expense category
+fun getCategoryStringRes(category: ExpenseCategory): Int {
+    return when (category) {
         ExpenseCategory.GROCERIES -> R.string.cat_groceries
         ExpenseCategory.FOOD_DRINK -> R.string.cat_food_drink
         ExpenseCategory.TRANSPORT_FUEL -> R.string.cat_transport
@@ -56,5 +55,10 @@ fun getLocalizedCategoryName(category: ExpenseCategory): String {
         ExpenseCategory.PERSONAL_CARE -> R.string.cat_personal
         ExpenseCategory.OTHER -> R.string.cat_other
     }
-    return stringResource(resId)
+}
+
+@Composable
+// Get localized string representation of an expense category
+fun getLocalizedCategoryName(category: ExpenseCategory): String {
+    return stringResource(getCategoryStringRes(category))
 }

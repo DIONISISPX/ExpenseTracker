@@ -49,6 +49,10 @@
     <string name="currency_euro">(€) Euro</string>
     <string name="currency_dollar">($) Dollar</string>
     <string name="export_csv">Export to CSV</string>
+    <string name="csv_header_store">Store</string>
+    <string name="csv_header_category">Category</string>
+    <string name="csv_header_amount">Amount</string>
+    <string name="csv_header_date">Date</string>
     <string name="clear_data">Delete all data</string>
     <string name="wipe_data_title">Delete all data</string>
     <string name="wipe_data_message">Are you sure you want to delete all expenses and reset your budget limits? This cannot be undone.</string>
