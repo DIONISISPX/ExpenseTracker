@@ -9,17 +9,17 @@ class GreekTextNormalizerTest {
 
     @Test
     fun stripGreekAccents_removesAccentsCorrectly() {
-        val input = "Άρτος, Έλαιο, Ήλιος, Φεγγάρι, Όριο, Νερό, Ώρα"
-        val expected = "Αρτος, Ελαιο, Ηλιος, Φεγγαρι, Οριο, Νερο, Ωρα"
+        val input = "Σύνολο, Μετρητά, Πληρωμή, Ψωμί, Καφές, Ποσότητα"
+        val expected = "Συνολο, Μετρητα, Πληρωμη, Ψωμι, Καφες, Ποσοτητα"
         assertEquals(expected, normalizer.stripGreekAccents(input))
     }
 
     @Test
     fun normalizeForFuzzy_convertsHomoglyphsToGreek() {
         // Test Latin to Greek homoglyph conversion
-        val ocrTotalWithLatin = "SENO" 
+        val ocrTotalWithLatin = "SENO"
         val expected = "ΣΕΝΟ"
-        
+
         assertEquals(expected, normalizer.normalizeForFuzzy(ocrTotalWithLatin))
     }
 
@@ -50,10 +50,10 @@ class GreekTextNormalizerTest {
         // Mismatched letter test
         val s1 = "ΣΚΛΑΒΕΝΙΤΗΣ"
         val s2 = "ΣΚΛΑΒΗΝΙΤΗΣ"
-        
+
         val score = normalizer.similarity(s1, s2)
         assertTrue(score > 0.90)
-        
+
         val s3 = "ΑΒ ΒΑΣΙΛΟΠΟΥΛΟΣ"
         val scoreDifferent = normalizer.similarity(s1, s3)
         assertTrue(scoreDifferent < 0.30)
